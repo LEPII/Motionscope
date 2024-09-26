@@ -4,7 +4,7 @@ const _ = require("lodash");
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const programs = await Program.find().sort("name");
+  const programs = await Program.find().sort("programTitle");
   res.send(programs);
 });
 
@@ -13,16 +13,11 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   let program = await Program.findOne({ id: req.body._id });
-    if (program) return res.status(400).send("program already exist");
+  if (program) return res.status(400).send("program already exist");
 
-   program = new Program(
-     _.pick(req.body, [
-       "programTitle",
-       "username",
-       "email",
-       "password",
-     ])
-   );
+  program = new Program(
+    _.pick(req.body, ["programTitle", "username", "email", "password"])
+  );
   program = await program.save();
 
   res.send(program);

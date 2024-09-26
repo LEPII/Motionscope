@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const exerciseSchema = new mongoose.Schema(
+const presetExerciseSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -33,7 +33,7 @@ const exerciseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Exercise = mongoose.model("Exercise", exerciseSchema);
+const presetExercise = mongoose.model("presetExercise", presetExerciseSchema);
 
-exports.exerciseSchema = exerciseSchema;
-exports.Exercise = Exercise;
+exports.presetExerciseSchema = presetExerciseSchema;
+exports.presetExercise = presetExercise;
