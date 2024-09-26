@@ -3,7 +3,9 @@ const config = require("config");
 const auth = require("./routes/auth");
 const mongoose = require("mongoose");
 const users = require("./routes/users");
+const program = require("./routes/programs")
 const express = require("express");
+
 
 const app = express();
 
@@ -20,5 +22,6 @@ mongoose
 app.use(express.json());
 app.use("/api/users", users);
 app.use("/api/auth", auth);
+app.use("/api/program", program)
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`$listening on port: ${port}...`));
