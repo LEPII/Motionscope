@@ -6,3 +6,7 @@ const programSchema = new mongoose.Schema({
   athlete: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
   blocks: { type: mongoose.Schema.Types.ObjectId, ref: "Block" },
 });
+
+const Program = mongoose.model("Program", programSchema);
+
+exports.Program = Program;
