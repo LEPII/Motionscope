@@ -1,11 +1,14 @@
 require("dotenv").config();
 const config = require("config");
-const auth = require("./routes/auth");
 const mongoose = require("mongoose");
-const users = require("./routes/users");
-const program = require("./routes/programs")
 const express = require("express");
-
+const auth = require("./routes/auth");
+const blocks = require("./routes/blocks");
+const exercises = require("./routes/exercises");
+const presetExercises = require("./routes/presetExercises");
+const programs = require("./routes/programs");
+const questionnaires = require("./routes/questionnaires");
+const users = require("./routes/users");
 
 const app = express();
 
@@ -20,8 +23,13 @@ mongoose
   .catch((err) => console.error("Could not connect to MongoDB..."));
 
 app.use(express.json());
-app.use("/api/users", users);
 app.use("/api/auth", auth);
-app.use("/api/program", program)
+app.use("/api/blocks", blocks);
+app.use("/api/exercises", exercises);
+app.use("/api/presetExercises", presetExercises);
+app.use("/api/programs", programs);
+app.use("/api/questionnaires", questionnaires);
+app.use("/api/users", users);
+
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`$listening on port: ${port}...`));
