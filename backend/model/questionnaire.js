@@ -169,6 +169,10 @@ const questionnaireSchema = new mongoose.Schema({
     maxlength: 2000,
     required: false,
   },
+  submitted: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 const Questionnaire = mongoose.model("Questionnaire", questionnaireSchema);
@@ -251,6 +255,7 @@ function validateQuestions(questions) {
         return value;
       }),
     questionsOrConcerns: Joi.string().max(2000).optional(),
+    submitted: Joi.boolean().required(),
   };
 
   return Joi.validate(questions, schema);

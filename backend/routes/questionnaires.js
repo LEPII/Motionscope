@@ -1,3 +1,4 @@
+const auth = require("../middleware/auth");
 const { Questionnaire, validate } = require("../model/questionnaire");
 const { User } = require("../model/user");
 const express = require("express");
@@ -6,6 +7,7 @@ const router = express.Router();
 // -- COACH'S ENDPOINTS --
 
 // Get a specific Athlete's Questionnaire
+
 router.get("/", async (req, res) => {
   try {
     // Find the athlete based on the provided athleteId? Need to finish doing Auth
@@ -44,20 +46,18 @@ router.post("/", async (req, res) => {
   if (error) return res.status(400).send(error.details[0].message);
 
   const questions = await Questionnaire.findById(req.body.QuestionnaireId);
-  if (!questions) return res.status(400).send("Invalid questionnaire.");
 
-  // let movie = new Movie({
-  //   title: req.body.title,
-  //   genre: {
-  //     _id: genre._id,
-  //     name: genre.name,
-  //   },
-  //   numberInStock: req.body.numberInStock,
-  //   dailyRentalRate: req.body.dailyRentalRate,
-  // });
-  // movie = await movie.save();
+  if (questions.submitted) {
+    return res.status(400).send("Questionnaire already submitted");
+  }
 
-  res.send(movie);
+  let question = new Question(req.body);
+
+  questions.submitted = true;
+  
+  question = await questions.save();
+
+  res.send(question);
 });
 
 // Patch Questionnaire
