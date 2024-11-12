@@ -1,5 +1,9 @@
 const auth = require("../middleware/auth");
-const { Questionnaire, validate } = require("../model/questionnaire");
+const {
+  Questionnaire,
+  validate,
+  patchedValidate,
+} = require("../model/questionnaire");
 const { User } = require("../model/user");
 const express = require("express");
 const router = express.Router();
@@ -10,9 +14,7 @@ const router = express.Router();
 
 router.get("/", async (req, res) => {
   try {
-    // Find the athlete based on the provided athleteId? Need to finish doing Auth
     const athlete = await User.findById(req.params.id);
-
     if (!athlete) {
       return res.status(404).json({ error: "Athlete not found" });
     }
@@ -45,21 +47,32 @@ router.post("/", async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const questions = await Questionnaire.findById(req.body.QuestionnaireId);
+  let question = new Questionnaire(req.body);
+  question.submitted = true;
 
-  if (questions.submitted) {
-    return res.status(400).send("Questionnaire already submitted");
-  }
-
-  let question = new Question(req.body);
-
-  questions.submitted = true;
-  
-  question = await questions.save();
+  question = await question.save();
 
   res.send(question);
 });
 
 // Patch Questionnaire
+
+router.patch("/:id", async (req, res) => {
+  const { error } = patchedValidate(req.body);
+  if (error) return res.status(400).send(error.details[0].message);
+
+  const update = { ...req.body };
+  delete update.submitted;
+
+  const questionnaire = await Questionnaire.findByIdAndUpdate(
+    req.params.id,
+    update,
+    { new: true, projection: { submitted: 0 } }
+  );
+
+  if (!questionnaire) return res.status(404).send("Questionnaire not found");
+
+  res.send(questionnaire);
+});
 
 module.exports = router;

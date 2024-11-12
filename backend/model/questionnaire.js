@@ -177,16 +177,18 @@ const questionnaireSchema = new mongoose.Schema({
 
 const Questionnaire = mongoose.model("Questionnaire", questionnaireSchema);
 
+const optionalForPatch = (value, helper) => {
+  if (helper.context.method === "PATCH" && value === undefined) {
+    return value;
+  }
+  return value;
+};
+
 function validateQuestions(questions) {
   const schema = {
     birthday: Joi.date()
       .required()
-      .custom((value, helper) => {
-        if (value > Date.now()) {
-          throw new Joi.ValidationError("birthday", "must be in the past");
-        }
-        return value;
-      }),
+      .allow((value) => value <= Date.now(), "Birthday must be in the past"),
     gender: Joi.string().valid("Male", "Female").required(),
     preferredMetric: Joi.string().valid("kilograms", "pounds").required(),
     height: Joi.number().required(),
@@ -209,15 +211,10 @@ function validateQuestions(questions) {
     bestDeadliftCompetition: Joi.number().default(null).min(1).max(2000),
     nextPlannedCompetitionDate: Joi.date()
       .default(null)
-      .custom((value) => {
-        if (value && value < Date.now()) {
-          throw new Joi.ValidationError(
-            "nextPlannedCompetitionDate",
-            "must be today or in the future"
-          );
-        }
-        return value;
-      }),
+      .allow(
+        (value) => value >= Date.now(),
+        "Next planned competition date must be today or in the future."
+      ),
     trainingHistory: Joi.string().max(2000).required(),
     currentTrainingProgram: Joi.string().max(2000).required(),
     rpeTrainingFamiliarity: Joi.string()
@@ -245,15 +242,10 @@ function validateQuestions(questions) {
     injuries: Joi.string().max(2000).optional(),
     startDate: Joi.date()
       .required()
-      .custom((value) => {
-        if (value < Date.now()) {
-          throw new Joi.ValidationError(
-            "startDate",
-            "must be today or in the future"
-          );
-        }
-        return value;
-      }),
+      .allow(
+        (value) => value >= Date.now(),
+        "Start date must be today or in the future."
+      ),
     questionsOrConcerns: Joi.string().max(2000).optional(),
     submitted: Joi.boolean().required(),
   };
@@ -261,5 +253,74 @@ function validateQuestions(questions) {
   return Joi.validate(questions, schema);
 }
 
+function validatePatchedQuestions(patchedQuestions) {
+  const patchedSchema = {
+    birthday: Joi.date()
+      .optional()
+      .allow((value) => value <= Date.now(), "Birthday must be in the past"),
+    gender: Joi.string().valid("Male", "Female").optional(),
+    preferredMetric: Joi.string().valid("kilograms", "pounds").optional(),
+    height: Joi.number().optional(),
+    currentBodyWeight: Joi.number().min(10).max(500).optional(),
+    desiredWeightClass: Joi.string()
+      .valid("59kg", "66kg", "74kg", "83kg", "93kg", "105kg", "120kg", "120kg+")
+      .optional(),
+    gymExperienceYears: Joi.number().min(0).max(100).optional(),
+    powerliftingExperienceYears: Joi.number().min(0).max(100).optional(),
+    competedInMeet: Joi.boolean().optional(),
+    bestSquatTraining: Joi.number().default(null).min(1).max(2000).optional(),
+    bestBenchTraining: Joi.number().default(null).min(1).max(2000).optional(),
+    bestDeadliftTraining: Joi.number()
+      .default(null)
+      .min(1)
+      .max(2000)
+      .optional(),
+    bestSquatCompetition: Joi.number().default(null).min(1).max(2000),
+    bestBenchCompetition: Joi.number().default(null).min(1).max(2000),
+    bestDeadliftCompetition: Joi.number().default(null).min(1).max(2000),
+    nextPlannedCompetitionDate: Joi.date()
+      .default(null)
+      .allow(
+        (value) => value >= Date.now(),
+        "Next planned competition date must be today or in the future."
+      ),
+    trainingHistory: Joi.string().max(2000).optional(),
+    currentTrainingProgram: Joi.string().max(2000).optional(),
+    rpeTrainingFamiliarity: Joi.string()
+      .valid("Not Familiar", "Somewhat Familiar", "Proficient")
+      .optional(),
+    deadliftStance: Joi.string()
+      .valid("Conventional", "Sumo", "No Preference")
+      .optional(),
+    liftingGoals: Joi.string().max(2000).optional(),
+    weeklyTrainingDays: Joi.number().optional(),
+    availableTrainingDays: Joi.array()
+      .items(
+        Joi.string().valid(
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday"
+        )
+      )
+      .optional(),
+    availableEquipment: Joi.string().max(2000).optional(),
+    injuries: Joi.string().max(2000).optional(),
+    startDate: Joi.date()
+      .optional()
+      .allow(
+        (value) => value >= Date.now(),
+        "Start date must be today or in the future."
+      ),
+    questionsOrConcerns: Joi.string().max(2000).optional(),
+    submitted: Joi.boolean().optional(),
+  };
+  return Joi.validate(patchedQuestions, patchedSchema);
+}
+
 exports.Questionnaire = Questionnaire;
 exports.validate = validateQuestions;
+exports.patchedValidate = validatePatchedQuestions;
