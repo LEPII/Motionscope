@@ -1,54 +1,57 @@
-const config = require("config");
+require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    firstName: {
-      type: String,
-      minLength: 1,
-      maxLength: 50,
-      required: true,
-      trim: true,
-    },
-    lastName: {
-      type: String,
-      minLength: 1,
-      maxLength: 50,
-      required: true,
-      trim: true,
-    },
-    username: {
-      type: String,
-      minLength: 5,
-      maxLength: 30,
-      required: true,
-      trim: true,
-      unique: true,
-    },
-    email: {
-      type: String,
-      minLength: 5,
-      maxLength: 255,
-      required: true,
-      unique: true,
-      trim: true,
-      lowercase: true,
-      match:
-        /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
-    },
-    password: {
-      type: String,
-      required: true,
-      minLength: 8,
-      maxLength: 1024,
-    },
-  })
+  firstName: {
+    type: String,
+    minLength: 1,
+    maxLength: 50,
+    required: true,
+    trim: true,
+  },
+  lastName: {
+    type: String,
+    minLength: 1,
+    maxLength: 50,
+    required: true,
+    trim: true,
+  },
+  username: {
+    type: String,
+    minLength: 5,
+    maxLength: 30,
+    required: true,
+    trim: true,
+    unique: true,
+  },
+  email: {
+    type: String,
+    minLength: 5,
+    maxLength: 255,
+    required: true,
+    unique: true,
+    trim: true,
+    lowercase: true,
+    match:
+      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
+  },
+  password: {
+    type: String,
+    required: true,
+    minLength: 8,
+    maxLength: 1024,
+  },
+});
 
-userSchema.methods.generateAuthToken = function() {
-  const token = jwt.sign({ _id: this._id }, config.get("jwtPrivateKey"));
-  return token; 
-}
+userSchema.methods.generateAuthToken = function () {
+  const token = jwt.sign(
+    { _id: this._id },
+    process.env.MOTIONSCOPE_JWT_PRIVATE_KEY
+  );
+  return token;
+};
 
 const User = mongoose.model("User", userSchema);
 

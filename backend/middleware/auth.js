@@ -1,5 +1,5 @@
 const jwt = require("jsonwebtoken");
-const config = require("config");
+require("dotenv").config();
 
 module.exports = function (req, res, next) {
   const token = req.header("x-auth-token");
@@ -8,7 +8,7 @@ module.exports = function (req, res, next) {
   // this verify method verified the JWT token. If its valid, it will decode it and return the payload.
 
   try {
-    const decoded = jwt.verify(token, config.get("jwtPrivateKey"));
+    const decoded = jwt.verify(token, process.env.MOTIONSCOPE_JWT_PRIVATE_KEY);
     req.user = decoded;
     next();
   } catch (ex) {
