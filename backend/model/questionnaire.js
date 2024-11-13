@@ -97,7 +97,7 @@ const questionnaireSchema = new mongoose.Schema({
     default: null,
     validate: {
       validator: function (value) {
-        return value >= Date.now(); // Ensures that the date is not in the past
+        return value >= Date.now(); 
       },
       message: "Next planned competition date must be today or in the future.",
     },

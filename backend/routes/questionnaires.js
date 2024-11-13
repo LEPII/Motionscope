@@ -4,7 +4,7 @@ const {
   validate,
   patchedValidate,
 } = require("../model/questionnaire");
-const { User } = require("../model/user");
+// const { User } = require("../model/user"); - ? 
 const express = require("express");
 const router = express.Router();
 
@@ -12,38 +12,18 @@ const router = express.Router();
 
 // Get a specific Athlete's Questionnaire
 
-router.get("/", async (req, res) => {
-  try {
-    const athlete = await User.findById(req.params.id);
-    if (!athlete) {
-      return res.status(404).json({ error: "Athlete not found" });
-    }
+// Find the questionnaire from the athlete - need to refactor and ?embed? the
 
-    // Ensure the coach is authorized to view the athlete's questionnaire
-    if (req.user.role !== "COACH" || athlete.coachId !== req.user.id) {
-      return res.status(403).json({ error: "Forbidden" });
-    }
-
-    // Find the questionnaire for the athlete
-    const questionnaire = await Questionnaire.findOne({
-      athleteId: athlete._id,
-    });
-
-    if (!questionnaire) {
-      return res.status(404).json({ error: "Questionnaire not found" });
-    }
-
-    res.json(questionnaire);
-  } catch (err) {
-    res.status(500).json({ error: "Server error" });
-  }
+router.get("/:id", async (req, res) => {
+  const questionnaire = await Questionnaire.findById(req.params.id);
+  res.send(questionnaire);
 });
 
 /// -- ATHLETE'S ENDPOINTS --
 
 // Post Questionnaire
 
-router.post("/", async (req, res) => {
+router.post("/", auth, async (req, res) => {
   const { error } = validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
@@ -57,7 +37,7 @@ router.post("/", async (req, res) => {
 
 // Patch Questionnaire
 
-router.patch("/:id", async (req, res) => {
+router.patch("/:id", auth, async (req, res) => {
   const { error } = patchedValidate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 

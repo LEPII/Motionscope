@@ -1,5 +1,4 @@
 require("dotenv").config();
-const config = require("config");
 const mongoose = require("mongoose");
 const express = require("express");
 const auth = require("./routes/auth");
@@ -13,11 +12,6 @@ const users = require("./routes/users");
 const app = express();
 
 app.use(express.json());
-
-if (!config.get("jwtPrivateKey")) {
-  console.error("FATAL ERROR: jwtPrivateKey is not not defined.");
-  process.exit(1);
-}
 
 mongoose
   .connect(process.env.MONGODB_URI)
