@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 const auth = require("./routes/auth");
 // const blocks = require("./routes/blocks");
-// const exercises = require("./routes/exercises");
+// const customExercises = require("./routes/customExercises");
 // const presetExercises = require("./routes/presetExercises");
 const programs = require("./routes/programs");
 const questionnaires = require("./routes/questionnaires");
@@ -21,7 +21,7 @@ mongoose
 app.use(express.json());
 app.use("/api/auth", auth);
 // app.use("/api/blocks", blocks);
-// app.use("/api/exercises", exercises);
+// app.use("/api/customExercises", customExercises);
 // app.use("/api/presetExercises", presetExercises);
 app.use("/api/programs", programs);
 app.use("/api/questionnaires", questionnaires);

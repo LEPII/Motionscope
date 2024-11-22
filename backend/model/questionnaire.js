@@ -1,5 +1,5 @@
-const mongoose = require("mongoose");
 const Joi = require("joi");
+const mongoose = require("mongoose");
 
 const questionnaireSchema = new mongoose.Schema({
   birthday: {
@@ -19,7 +19,7 @@ const questionnaireSchema = new mongoose.Schema({
   },
   preferredMetric: {
     type: String,
-    enum: ["kilograms", "pounds"],
+    enum: ["Kilograms", "Pounds"],
     required: true,
   },
   height: {
@@ -97,7 +97,7 @@ const questionnaireSchema = new mongoose.Schema({
     default: null,
     validate: {
       validator: function (value) {
-        return value >= Date.now(); 
+        return value >= Date.now();
       },
       message: "Next planned competition date must be today or in the future.",
     },
@@ -255,6 +255,7 @@ function validateQuestions(questions) {
 
 function validatePatchedQuestions(patchedQuestions) {
   const patchedSchema = {
+    _id: Joi.objectId().required(),
     birthday: Joi.date()
       .optional()
       .allow((value) => value <= Date.now(), "Birthday must be in the past"),
