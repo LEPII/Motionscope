@@ -1,10 +1,10 @@
-const mongoose = require("mongoose");
 const Joi = require("joi");
+const mongoose = require("mongoose");
 
 const questionnaireSchema = new mongoose.Schema({
   birthday: {
     type: Date,
-    required: true,
+
     validate: {
       validator: function (value) {
         return value <= Date.now();
@@ -12,6 +12,7 @@ const questionnaireSchema = new mongoose.Schema({
       message: "Birthday must be in the past.",
     },
   },
+  required: true,
   gender: {
     type: String,
     enum: ["Male", "Female"],
@@ -19,7 +20,7 @@ const questionnaireSchema = new mongoose.Schema({
   },
   preferredMetric: {
     type: String,
-    enum: ["kilograms", "pounds"],
+    enum: ["Kilograms", "Pounds"],
     required: true,
   },
   height: {
@@ -28,9 +29,9 @@ const questionnaireSchema = new mongoose.Schema({
   },
   currentBodyWeight: {
     type: Number,
-    required: true,
     min: 10,
     max: 500,
+    required: true,
   },
   desiredWeightClass: {
     type: String,
@@ -39,15 +40,15 @@ const questionnaireSchema = new mongoose.Schema({
   },
   gymExperienceYears: {
     type: Number,
-    required: true,
     min: 0,
     max: 100,
+    required: true,
   },
   powerliftingExperienceYears: {
     type: Number,
-    required: true,
     min: 0,
     max: 100,
+    required: true,
   },
   competedInMeet: {
     type: Boolean,
@@ -55,24 +56,24 @@ const questionnaireSchema = new mongoose.Schema({
   },
   bestSquatTraining: {
     type: Number,
-    required: true,
     default: null,
     min: 1,
-    max: 2000,
+    max: 5000,
+    required: true,
   },
   bestBenchTraining: {
     type: Number,
-    required: true,
     default: null,
     min: 1,
-    max: 2000,
+    max: 5000,
+    required: true,
   },
   bestDeadliftTraining: {
     type: Number,
-    required: true,
     default: null,
     min: 1,
-    max: 2000,
+    max: 5000,
+    required: true,
   },
   bestSquatCompetition: {
     type: Number,
@@ -97,19 +98,19 @@ const questionnaireSchema = new mongoose.Schema({
     default: null,
     validate: {
       validator: function (value) {
-        return value >= Date.now(); 
+        return value >= Date.now();
       },
       message: "Next planned competition date must be today or in the future.",
     },
   },
   trainingHistory: {
     type: String,
-    maxlength: 2000,
+    maxLength: 2000,
     required: true,
   },
   currentTrainingProgram: {
     type: String,
-    maxlength: 2000,
+    maxLength: 2000,
     required: true,
   },
   rpeTrainingFamiliarity: {
@@ -124,11 +125,7 @@ const questionnaireSchema = new mongoose.Schema({
   },
   liftingGoals: {
     type: String,
-    maxlength: 2000,
-    required: true,
-  },
-  weeklyTrainingDays: {
-    type: Number,
+    maxLength: 2000,
     required: true,
   },
   availableTrainingDays: {
@@ -146,12 +143,12 @@ const questionnaireSchema = new mongoose.Schema({
   },
   availableEquipment: {
     type: String,
-    maxlength: 2000,
+    maxLength: 2000,
     required: true,
   },
   injuries: {
     type: String,
-    maxlength: 2000,
+    maxLength: 2000,
     required: false,
   },
   startDate: {
@@ -166,7 +163,7 @@ const questionnaireSchema = new mongoose.Schema({
   },
   questionsOrConcerns: {
     type: String,
-    maxlength: 2000,
+    maxLength: 2000,
     required: false,
   },
   submitted: {
@@ -177,20 +174,13 @@ const questionnaireSchema = new mongoose.Schema({
 
 const Questionnaire = mongoose.model("Questionnaire", questionnaireSchema);
 
-const optionalForPatch = (value, helper) => {
-  if (helper.context.method === "PATCH" && value === undefined) {
-    return value;
-  }
-  return value;
-};
-
 function validateQuestions(questions) {
   const schema = {
     birthday: Joi.date()
       .required()
       .allow((value) => value <= Date.now(), "Birthday must be in the past"),
     gender: Joi.string().valid("Male", "Female").required(),
-    preferredMetric: Joi.string().valid("kilograms", "pounds").required(),
+    preferredMetric: Joi.string().valid("Kilograms", "Pounds").required(),
     height: Joi.number().required(),
     currentBodyWeight: Joi.number().min(10).max(500).required(),
     desiredWeightClass: Joi.string()
@@ -199,16 +189,16 @@ function validateQuestions(questions) {
     gymExperienceYears: Joi.number().min(0).max(100).required(),
     powerliftingExperienceYears: Joi.number().min(0).max(100).required(),
     competedInMeet: Joi.boolean().required(),
-    bestSquatTraining: Joi.number().default(null).min(1).max(2000).required(),
-    bestBenchTraining: Joi.number().default(null).min(1).max(2000).required(),
+    bestSquatTraining: Joi.number().default(null).min(1).max(5000).required(),
+    bestBenchTraining: Joi.number().default(null).min(1).max(5000).required(),
     bestDeadliftTraining: Joi.number()
       .default(null)
       .min(1)
-      .max(2000)
+      .max(5000)
       .required(),
-    bestSquatCompetition: Joi.number().default(null).min(1).max(2000),
-    bestBenchCompetition: Joi.number().default(null).min(1).max(2000),
-    bestDeadliftCompetition: Joi.number().default(null).min(1).max(2000),
+    bestSquatCompetition: Joi.number().default(null).min(1).max(5000),
+    bestBenchCompetition: Joi.number().default(null).min(1).max(5000),
+    bestDeadliftCompetition: Joi.number().default(null).min(1).max(5000),
     nextPlannedCompetitionDate: Joi.date()
       .default(null)
       .allow(
@@ -224,7 +214,6 @@ function validateQuestions(questions) {
       .valid("Conventional", "Sumo", "No Preference")
       .required(),
     liftingGoals: Joi.string().max(2000).required(),
-    weeklyTrainingDays: Joi.number().required(),
     availableTrainingDays: Joi.array()
       .items(
         Joi.string().valid(
@@ -255,6 +244,7 @@ function validateQuestions(questions) {
 
 function validatePatchedQuestions(patchedQuestions) {
   const patchedSchema = {
+    _id: Joi.objectId().required(),
     birthday: Joi.date()
       .optional()
       .allow((value) => value <= Date.now(), "Birthday must be in the past"),
@@ -293,7 +283,6 @@ function validatePatchedQuestions(patchedQuestions) {
       .valid("Conventional", "Sumo", "No Preference")
       .optional(),
     liftingGoals: Joi.string().max(2000).optional(),
-    weeklyTrainingDays: Joi.number().optional(),
     availableTrainingDays: Joi.array()
       .items(
         Joi.string().valid(

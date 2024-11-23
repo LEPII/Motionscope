@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
-const presetExerciseSchema = new mongoose.Schema(
+const exerciseSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -55,10 +55,10 @@ const presetExerciseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const presetExercise = mongoose.model("presetExercise", presetExerciseSchema);
+const Exercise = mongoose.model("Exercise", exerciseSchema);
 
-function validatePresetExercises(presetExercises) {
-  const presetExercisesSchema = {
+function validateCustomExercises(customExercises) {
+  const customExercisesSchema = {
     name: Joi.string().min(3).max(50).required(),
     description: Joi.string().min(10).max(100).required(),
     sets: Joi.number().min(0).max(10).required(),
@@ -97,9 +97,9 @@ function validatePresetExercises(presetExercises) {
       )
       .required(),
   };
-  return Joi.validate(presetExercises, presetExercisesSchema);
+  return Joi.validate(customExercises, customExercisesSchema);
 }
 
-exports.presetExerciseSchema = presetExerciseSchema;
-exports.presetExercise = presetExercise;
-exports.validatePresetExercises = validatePresetExercises;
+exports.exerciseSchema = exerciseSchema;
+exports.Exercise = Exercise;
+exports.validateCustomExercises = validateCustomExercises;
