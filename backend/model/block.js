@@ -148,6 +148,5 @@ function validateBlock(blockInfo) {
   return Joi.validate(blockInfo, blockSchema);
 }
 
-exports.blockSchema = blockSchema;
-exports.validateBlock = validateBlock; 
 exports.Block = Block;
+exports.validateBlock = validateBlock; 

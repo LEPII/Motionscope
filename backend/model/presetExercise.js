@@ -61,17 +61,17 @@ function validatePresetExercises(presetExercises) {
   const presetExercisesSchema = {
     name: Joi.string().min(3).max(50).required(),
     description: Joi.string().min(10).max(100).required(),
-    sets: Joi.number().min(0).max(10).required(),
-    repsMin: Joi.number().min(0).max(30).required(),
-    repsMax: Joi.number().min(0).max(30).required(),
-    prescribedLoadMin: Joi.number().min(0).max(100).required(),
-    prescribedLoadMax: Joi.number().min(0).max(100).required(),
-    prescribedRPEMin: Joi.number().min(0).max(10).required(),
-    prescribedRPEMax: Joi.number().min(0).max(10).required(),
-    actualLoadMin: Joi.number().min(0).max(10000).required(),
-    actualLoadMax: Joi.number().min(0).max(10000).required(),
-    actualRPEMin: Joi.number().min(0).max(10).required(),
-    actualRPEMax: Joi.number().min(0).max(10).required(),
+    sets: Joi.number().min(0).max(10),
+    repsMin: Joi.number().min(0).max(30),
+    repsMax: Joi.number().min(0).max(30),
+    prescribedLoadMin: Joi.number().min(0).max(100),
+    prescribedLoadMax: Joi.number().min(0).max(100),
+    prescribedRPEMin: Joi.number().min(0).max(10),
+    prescribedRPEMax: Joi.number().min(0).max(10),
+    actualLoadMin: Joi.number().min(0).max(10000),
+    actualLoadMax: Joi.number().min(0).max(10000),
+    actualRPEMin: Joi.number().min(0).max(10),
+    actualRPEMax: Joi.number().min(0).max(10),
     cuesFromCoach: Joi.string().min(3).max(1000),
     sideNote: Joi.string().min(1).max(1000),
     muscleGroup: Joi.array()
@@ -99,7 +99,6 @@ function validatePresetExercises(presetExercises) {
   };
   return Joi.validate(presetExercises, presetExercisesSchema);
 }
-
-exports.presetExerciseSchema = presetExerciseSchema;
+;
 exports.presetExercise = presetExercise;
 exports.validatePresetExercises = validatePresetExercises;
