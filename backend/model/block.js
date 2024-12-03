@@ -77,17 +77,33 @@ const blockSchema = new mongoose.Schema({
               message: "Please select at least one title for the day.",
             },
           },
-          exercise: [{ type: mongoose.Schema.Types.ObjectId, ref: "Exercise" }],
-          presetExercise: [
-            {
-              type: mongoose.Schema.Types.ObjectId,
-              ref: "PresetExercise",
-            },
-          ],
+          exercises: [exerciseSchema],
+          presetExercises: [presetExerciseSchema],
         },
       ],
     },
   ],
+});
+
+blockSchema.pre("validate", function (next) {
+  // Validates if numberOfWeeks is the same as the amount of object in weeklySchedule. 
+  if (this.numberOfWeeks !== this.weeklySchedule.length) {
+    this.invalidate(
+      "numberOfWeeks",
+      "Number of weeks must match the length of weeks in weeklySchedule"
+    );
+  }
+
+  // Validate if the number of items in the days array is the same as the amount of objects in the dailySchedule array. 
+  this.weeklySchedule.forEach((week, index) => {
+    if (this.days.length !== week.dailySchedule.length) {
+      this.invalidate(
+        `weeklySchedule.${index}.dailySchedule`,
+        "Number of days in weeklySchedule must match the length of days selected"
+      );
+    }
+  });
+  next();
 });
 
 const Block = mongoose.model("Block", blockSchema);
