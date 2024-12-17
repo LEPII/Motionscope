@@ -86,15 +86,14 @@ const blockSchema = new mongoose.Schema({
 });
 
 blockSchema.pre("validate", function (next) {
-  // Validates if numberOfWeeks is the same as the amount of object in weeklySchedule. 
+  // Validates if numberOfWeeks is the same as the amount of object in weeklySchedule.
   if (this.numberOfWeeks !== this.weeklySchedule.length) {
     this.invalidate(
       "numberOfWeeks",
       "Number of weeks must match the length of weeks in weeklySchedule"
     );
   }
-
-  // Validate if the number of items in the days array is the same as the amount of objects in the dailySchedule array. 
+  // Validate if the number of items in the days array is the same as the amount of objects in the dailySchedule array.
   this.weeklySchedule.forEach((week, index) => {
     if (this.days.length !== week.dailySchedule.length) {
       this.invalidate(
@@ -165,4 +164,4 @@ function validateBlock(blockInfo) {
 }
 
 exports.Block = Block;
-exports.validateBlock = validateBlock; 
+exports.validateBlock = validateBlock;

@@ -1,11 +1,10 @@
 const { Block, validateBlock } = require("../model/block");
 const {
-  customExercise,
+  CustomExercise,
   validateCustomExercises,
-  Exercise,
 } = require("../model/customExercise");
 const {
-  presetExercise,
+  PresetExercise,
   validatePresetExercises,
 } = require("../model/presetExercise");
 const express = require("express");
@@ -31,47 +30,91 @@ router.get("/", async (req, res) => {
 // Post a Block to a Specific Athlete
 
 router.post("/", async (req, res) => {
-  const { blockName, numberOfWeeks, blockStartDate, days, weeklySchedule } =
-    req.body;
+  try {
+    const {
+      blockName,
+      numberOfWeeks,
+      blockStartDate,
+      days,
+      weeklySchedule,
+      presetId = null,
+    } = req.body;
 
-  const newBlock = new Block({
-    blockName,
-    numberOfWeeks,
-    blockStartDate,
-    days,
-    weeklySchedule: weeklySchedule.map((week) => ({
-      weekStartDate: week.weekStartDate,
-      dailySchedule: week.dailySchedule.map((dailySchedule) => ({
-        primaryExercise: dailySchedule.primaryExercise,
-        exercises: dailySchedule.exercises.map((exercise) => {
-          const newExercise = new Exercise({
-            name: exercise.name,
-            description: exercise.description,
-            sets: exercise.sets,
-            repsMin: exercise.repsMin || 0,
-            repsMax: exercise.repsMax,
-            prescribedLoadMin: exercise.prescribedLoadMin || 0,
-            prescribedRPEMin: exercise.prescribedRPEMin || 0,
-            prescribedLoadMax: exercise.prescribedLoadMax,
-            prescribedRPEMax: exercise.prescribedRPEMax,
-            actualLoadMin: exercise.actualLoadMin || 0,
-            actualLoadMax: exercise.actualLoadMax,
-            actualRPEMin: exercise.actualRPEMin || 0,
-            actualRPEMax: exercise.actualRPEMax,
-            cuesFromCoach: exercise.cuesFromCoach || "",
-            sideNote: exercise.sideNote || "",
-          });
-          return newExercise;
-        }),
+    // Batch Fetching Preset Exercises
+    let presetExerciseMap;
+    if (presetId) {
+      const allPresetExercises = await PresetExercise.find();
+      presetExerciseMap = new Map(
+        allPresetExercises.map((preset) => [preset._id.toString(), preset])
+      );
+    }
+
+    function createPresetExercise(presetId, presetExerciseMap, exercise) {
+      const presetExercise = presetExerciseMap.get(presetId.toString());
+      if (!presetExercise) {
+        throw new Error(`Preset exercise with ID ${presetId} not founds`);
+      }
+      return new CustomExercise({
+        name: presetExercise.name,
+        description: presetExercise.description,
+        sets: exercise.sets,
+        repsMin: exercise.repsMin || 0,
+        reps: exercise.reps,
+        prescribedLoadMin: exercise.prescribedLoadMin || 0,
+        prescribedLoad: exercise.prescribedLoad,
+        prescribedRPEMin: exercise.prescribedRPEMin || 0,
+        prescribedRPE: exercise.prescribedRPE,
+        cuesFromCoach: exercise.cuesFromCoach || "",
+        sideNote: exercise.sideNote || "",
+      });
+    }
+
+    function createCustomExercise(exercise) {
+      return new CustomExercise({
+        name: exercise.name,
+        description: exercise.description,
+        sets: exercise.sets,
+        repsMin: exercise.repsMin || 0,
+        reps: exercise.reps,
+        prescribedLoadMin: exercise.prescribedLoadMin || 0,
+        prescribedLoad: exercise.prescribedLoad,
+        prescribedRPEMin: exercise.prescribedRPEMin || 0,
+        prescribedRPE: exercise.prescribedRPE,
+        cuesFromCoach: exercise.cuesFromCoach || "",
+        sideNote: exercise.sideNote || "",
+      });
+    }
+
+    const newExercise = dailySchedule.exercise.map((exercise) => {
+      if (exercise.presetId) {
+        return createPresetExercise(exercise.presetId, presetExerciseMap);
+      } else {
+        return createCustomExercise(exercise);
+      }
+    });
+
+    const newBlock = new Block({
+      blockName,
+      numberOfWeeks,
+      blockStartDate,
+      days,
+      weeklySchedule: weeklySchedule.map((week) => ({
+        weekStartDate: week.weekStartDate,
+        dailySchedule: week.dailySchedule.map((dailySchedule) => ({
+          primaryExercise: dailySchedule.primaryExercise,
+          exercises: newExercise,
+        })),
       })),
-    })),
-  });
+    });
 
-
-  
-
-  const savedBlock = await newBlock.save();
-  res.send(savedBlock);
+    const savedBlock = await newBlock.save();
+    res
+      .status(201)
+      .json({ message: "Block Successfully Created", data: savedBlock });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Server Error" });
+  }
 });
 
 // Update a Block from a Specific Athlete

@@ -1,7 +1,7 @@
 const Joi = require("joi");
 const mongoose = require("mongoose");
 
-const exerciseSchema = new mongoose.Schema(
+const customExerciseSchema = new mongoose.Schema(
   {
     name: {
       type: String,
@@ -15,19 +15,18 @@ const exerciseSchema = new mongoose.Schema(
     sets: {
       type: Number,
       min: 0,
-      max: 10,
+      max: 20,
       required: true,
     },
     repsMin: { type: Number, min: 0, max: 30 },
-    repsMax: { type: Number, min: 0, max: 30 },
+    reps: { type: Number, min: 0, max: 30 },
     prescribedLoadMin: { type: Number, min: 0, max: 100 },
-    prescribedLoadMax: { type: Number, min: 0, max: 100 },
+    prescribedLoad: { type: Number, min: 0, max: 100 },
     prescribedRPEMin: { type: Number, min: 0, max: 10 },
-    prescribedRPEMax: { type: Number, min: 0, max: 10 },
-    actualLoadMin: { type: Number, min: 0, max: 10000 },
-    actualLoadMax: { type: Number, min: 0, max: 10000 },
+    prescribedRPE: { type: Number, min: 0, max: 10 },
+    actualLoad: { type: Number, min: 0, max: 10000 },
     actualRPEMin: { type: Number, min: 0, max: 10 },
-    actualRPEMax: { type: Number, min: 0, max: 10 },
+    actualRPE: { type: Number, min: 0, max: 10 },
     cuesFromCoach: { type: String, minLength: 3, maxLength: 1000 },
     sideNote: { type: String, minLength: 1, maxLength: 1000 },
     muscleGroup: {
@@ -55,23 +54,22 @@ const exerciseSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-const Exercise = mongoose.model("Exercise", exerciseSchema);
+const CustomExercise = mongoose.model("customExercise", customExerciseSchema);
 
 function validateCustomExercises(customExercises) {
   const customExercisesSchema = {
     name: Joi.string().min(3).max(50).required(),
-    description: Joi.string().min(10).max(100).required(),
-    sets: Joi.number().min(0).max(10),
+    description: Joi.string().min(10).max(1000).required(),
+    sets: Joi.number().min(0).max(20),
     repsMin: Joi.number().min(0).max(30),
-    repsMax: Joi.number().min(0).max(30),
+    reps: Joi.number().min(0).max(30),
     prescribedLoadMin: Joi.number().min(0).max(100),
-    prescribedLoadMax: Joi.number().min(0).max(100),
+    prescribedLoad: Joi.number().min(0).max(100),
     prescribedRPEMin: Joi.number().min(0).max(10),
-    prescribedRPEMax: Joi.number().min(0).max(10),
-    actualLoadMin: Joi.number().min(0).max(10000),
-    actualLoadMax: Joi.number().min(0).max(10000),
+    prescribedRPE: Joi.number().min(0).max(10),
+    actualLoad: Joi.number().min(0).max(10000),
     actualRPEMin: Joi.number().min(0).max(10),
-    actualRPEMax: Joi.number().min(0).max(10),
+    actualRPE: Joi.number().min(0).max(10),
     cuesFromCoach: Joi.string().min(3).max(1000),
     sideNote: Joi.string().min(1).max(1000),
     muscleGroup: Joi.array()
@@ -100,5 +98,5 @@ function validateCustomExercises(customExercises) {
   return Joi.validate(customExercises, customExercisesSchema);
 }
 
-exports.Exercise = Exercise;
+exports.CustomExercise = CustomExercise;
 exports.validateCustomExercises = validateCustomExercises;
