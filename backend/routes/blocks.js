@@ -10,6 +10,7 @@ const {
 const express = require("express");
 const _ = require("lodash");
 const router = express.Router();
+const blockValidation = require("../middleware/blockMiddleware");
 
 // -- COACH'S ENDPOINTS --
 
@@ -29,7 +30,7 @@ router.get("/", async (req, res) => {
 
 // Post a Block to a Specific Athlete
 
-router.post("/", async (req, res) => {
+router.post("/", blockValidation, async (req, res) => {
   try {
     const {
       blockName,
@@ -49,7 +50,7 @@ router.post("/", async (req, res) => {
       );
     }
 
-    function createPresetExercise(presetId, presetExerciseMap, exercise) {
+    function createFromPresetExercise(presetId, presetExerciseMap, exercise) {
       const presetExercise = presetExerciseMap.get(presetId.toString());
       if (!presetExercise) {
         throw new Error(`Preset exercise with ID ${presetId} not founds`);
@@ -87,7 +88,7 @@ router.post("/", async (req, res) => {
 
     const newExercise = dailySchedule.exercise.map((exercise) => {
       if (exercise.presetId) {
-        return createPresetExercise(exercise.presetId, presetExerciseMap);
+        return createFromPresetExercise(exercise.presetId, presetExerciseMap);
       } else {
         return createCustomExercise(exercise);
       }
@@ -119,36 +120,28 @@ router.post("/", async (req, res) => {
 
 // Update a Block from a Specific Athlete
 
-// router.patch("/:id", async (req, res) => {
+router.patch("/:id", blockValidation, async (req, res) => {
+  const currentBlock = await Block.findByIdAndUpdate(
+    req.params.id,
+    _.pick(req.body, ["blockName", "numberOfWeeks", "blockStartDate", "days"], {
+      new: true,
+    })
+  );
 
-//   const currentBlock = await Block.findByIdAndUpdate(
-//     req.params.id, _.pick(req.body, ["blockName", "numberOfWeeks", "blockStartDate", "days"], { new: true})
-//   )
-
-//   const updateData = {
-//     blockName,
-//     numberOfWeeks,
-//     blockStartDate,
-//     days,
-//     weeklySchedule: weeklySchedule.map(week => ({
-//       weekStartDate,
-//       dailySchedule: day.dailySchedule.map(day => ({
-//         primExercises,
-//         presetExercise: day.exercise.map(async presetExerciseData => {
-//         }),
-//       }))
-//     }))
-//   };
-
-//   if (numberOfWeeks !== weeklySchedule.length) {
-//   return res.status(400).json({ error: 'Number of weeks being able to train must match the length of the weekly schedule.' });
-// }
-
-// for (const week of weeklySchedule) {
-//   if (days.length !== week.dailySchedule.length) {
-//     return res.status(400).json({ error: 'Number of days in weeklySchedule must match the specified days' });
-//   }
-// }
+  const updateData = {
+    blockName,
+    numberOfWeeks,
+    blockStartDate,
+    days,
+    weeklySchedule: weeklySchedule.map((week) => ({
+      weekStartDate,
+      dailySchedule: day.dailySchedule.map((day) => ({
+        primExercises,
+        presetExercise: day.exercise.map(async (presetExerciseData) => {}),
+      })),
+    })),
+  };
+});
 
 // Delete a Block from a Specific Athlete
 
@@ -156,7 +149,7 @@ router.post("/", async (req, res) => {
 
 router.post("/", async (req, res) => {
   let blockTemplate = new Block(req.body);
-  blockTemplate = await block.save();
+  blockTemplate = await blockTemplate.save();
   res.send(blockTemplate);
 });
 
