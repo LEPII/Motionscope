@@ -170,3 +170,41 @@ router.get("/", async (req, res) => {
 });
 
 // Update Blocks (Only three fields - Load, RPE and Notes
+
+router.patch("/:id", async (req, res) => {
+  try {
+    const { blockId, exerciseId } = req.params;
+    const { actualLoad, actualRPEMin, actualRPE, sideNote } = req.body;
+
+    const block = await Block.findById(blockId);
+
+    if (!block) {
+      return res.status(400).json({ error: "Block not found" });
+    }
+
+    const currentExercise = block.weeklySchedule.find((week) => {
+      return week.dailySchedule.some((day) => {
+        return day.exercises.some((exercise) => {
+          return exercise._id.toString() === exerciseId.toString();
+        });
+      });
+    });
+
+    if (!currentExercise) {
+      return res.status(404).json({ error: "Exercise not found" });
+    }
+
+    currentExercise.actualLoad = actualLoad;
+    currentExercise.actualRPEMin = actualRPEMin;
+    currentExercise.actualRPE = actualRPE;
+
+    await block.save();
+
+    res
+      .status(200)
+      .json({ message: "Exercise updated successfully", currentExercise });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Failed to update exercise" });
+  }
+});
