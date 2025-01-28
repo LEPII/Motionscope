@@ -1,5 +1,5 @@
-const Joi = require("joi");
-const mongoose = require("mongoose");
+import Joi from "joi";
+import mongoose from "mongoose";
 
 const customExerciseSchema = new mongoose.Schema(
   {
@@ -16,7 +16,6 @@ const customExerciseSchema = new mongoose.Schema(
       type: Number,
       min: 0,
       max: 20,
-      required: true,
     },
     repsMin: { type: Number, min: 0, max: 30 },
     reps: { type: Number, min: 0, max: 30 },
@@ -59,7 +58,7 @@ const CustomExercise = mongoose.model("customExercise", customExerciseSchema);
 function validateCustomExercises(customExercises) {
   const customExercisesSchema = {
     name: Joi.string().min(3).max(50).required(),
-    description: Joi.string().min(10).max(1000).required(),
+    description: Joi.string().min(10).max(1000),
     sets: Joi.number().min(0).max(20),
     repsMin: Joi.number().min(0).max(30),
     reps: Joi.number().min(0).max(30),
@@ -72,31 +71,28 @@ function validateCustomExercises(customExercises) {
     actualRPE: Joi.number().min(0).max(10),
     cuesFromCoach: Joi.string().min(3).max(1000),
     sideNote: Joi.string().min(1).max(1000),
-    muscleGroup: Joi.array()
-      .items(
-        Joi.string().valid(
-          "Chest",
-          "Back",
-          "Shoulders",
-          "Core",
-          "Lats",
-          "Traps",
-          "Deltoids",
-          "Biceps",
-          "Triceps",
-          "Forearms",
-          "Quadriceps",
-          "Hamstrings",
-          "Calves",
-          "Glutes",
-          "Abdominals",
-          "Obliques"
-        )
+    muscleGroup: Joi.array().items(
+      Joi.string().valid(
+        "Chest",
+        "Back",
+        "Shoulders",
+        "Core",
+        "Lats",
+        "Traps",
+        "Deltoids",
+        "Biceps",
+        "Triceps",
+        "Forearms",
+        "Quadriceps",
+        "Hamstrings",
+        "Calves",
+        "Glutes",
+        "Abdominals",
+        "Obliques"
       )
-      .required(),
+    ),
   };
   return Joi.validate(customExercises, customExercisesSchema);
 }
 
-exports.CustomExercise = CustomExercise;
-exports.validateCustomExercises = validateCustomExercises;
+export { customExerciseSchema, CustomExercise, validateCustomExercises };

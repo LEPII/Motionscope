@@ -1,5 +1,10 @@
-const Joi = require("joi");
-const mongoose = require("mongoose");
+import Joi from "joi";
+import mongoose from "mongoose";
+import JoiObjectId from "joi-objectid";
+import {customExerciseSchema} from "./customExercise.js";
+import { presetExerciseSchema } from "./presetExercise.js";
+
+Joi.objectId = JoiObjectId(Joi);
 
 const blockSchema = new mongoose.Schema({
   blockName: { type: String, minLength: 1, maxLength: 50, required: true },
@@ -77,8 +82,8 @@ const blockSchema = new mongoose.Schema({
               message: "Please select at least one title for the day.",
             },
           },
-          exercises: [exerciseSchema],
-          presetExercises: [presetExerciseSchema],
+          customExercises: [customExerciseSchema],
+          presetExercisesId: [presetExerciseSchema],
         },
       ],
     },
@@ -87,7 +92,7 @@ const blockSchema = new mongoose.Schema({
 
 const Block = mongoose.model("Block", blockSchema);
 
-function validateBlock(blockInfo) {
+const validateBlock = (blockInfo) => {
   const blockSchema = {
     blockName: Joi.string().min(1).max(50).required(),
     numberOfWeeks: Joi.number().min(1).max(12).required(),
@@ -129,8 +134,16 @@ function validateBlock(blockInfo) {
                     "Volume Deadlift"
                   )
                 ),
-                exercise: Joi.string().required(),
-                presetExercise: Joi.string().required(),
+                customExercises: Joi.array().items(ObjectId()).optional(),
+                presetExercisesId: Joi.array().items(ObjectId()).optional(),
+                customExercises: Joi.when("presetExercisesId", {
+                  is: Joi.array().length(0),
+                  then: Joi.array().items(ObjectId()).min(1),
+                }),
+                presetExercisesId: Joi.when("customExercises", {
+                  is: Joi.array().length(0),
+                  then: Joi.array().items(ObjectId()).min(1),
+                }),
               })
             )
             .min(1)
@@ -141,6 +154,6 @@ function validateBlock(blockInfo) {
       .required(),
   };
   return Joi.validate(blockInfo, blockSchema);
-}
+};
 
-exports.Block = Block;
+export { Block, validateBlock };

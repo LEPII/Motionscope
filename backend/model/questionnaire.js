@@ -1,10 +1,10 @@
-const Joi = require("joi");
-const mongoose = require("mongoose");
+import Joi from "joi";
+import mongoose from "mongoose";
 
 const questionnaireSchema = new mongoose.Schema({
   birthday: {
     type: Date,
-
+    required: true,
     validate: {
       validator: function (value) {
         return value <= Date.now();
@@ -12,7 +12,6 @@ const questionnaireSchema = new mongoose.Schema({
       message: "Birthday must be in the past.",
     },
   },
-  required: true,
   gender: {
     type: String,
     enum: ["Male", "Female"],
@@ -310,6 +309,8 @@ function validatePatchedQuestions(patchedQuestions) {
   return Joi.validate(patchedQuestions, patchedSchema);
 }
 
-exports.Questionnaire = Questionnaire;
-exports.validate = validateQuestions;
-exports.patchedValidate = validatePatchedQuestions;
+export {
+  Questionnaire,
+  validateQuestions as validate,
+  validatePatchedQuestions as patchedValidate,
+};

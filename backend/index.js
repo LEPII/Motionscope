@@ -1,12 +1,13 @@
-require("dotenv").config();
-const mongoose = require("mongoose");
-const express = require("express");
-const auth = require("./routes/auth");
-// const blocks = require("./routes/blocks");
-// const exercises = require("./routes/exercises");
-const programs = require("./routes/programs");
-const questionnaires = require("./routes/questionnaires");
-const users = require("./routes/users");
+// require("dotenv").config();
+import mongoose from "mongoose";
+import express from "express";
+import auth from "./routes/auth.js";
+import blocks from "./routes/blocks.js";
+import customExercises from "./routes/customExercises.js";
+import presetExercises from "./routes/presetExercises.js";
+import programs from "./routes/programs.js";
+import questionnaires from "./routes/questionnaires.js";
+import users from "./routes/users.js"; 
 
 const app = express();
 
@@ -19,8 +20,9 @@ mongoose
 
 app.use(express.json());
 app.use("/api/auth", auth);
-// app.use("/api/blocks", blocks);
-// app.use("/api/exercises", exercises);
+app.use("/api/blocks", blocks);
+app.use("/api/customExercises", customExercises);
+app.use("/api/presetExercises", presetExercises);
 app.use("/api/programs", programs);
 app.use("/api/questionnaires", questionnaires);
 app.use("/api/users", users);
