@@ -1,4 +1,4 @@
-module.exports = (req, res, next) => {
+export default (req, res, next) => {
   const { numberOfWeeks, days, weeklySchedule } = req.body;
 
   if (numberOfWeeks !== weeklySchedule.length) {

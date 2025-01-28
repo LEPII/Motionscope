@@ -1,5 +1,5 @@
-const Joi = require("joi");
-const mongoose = require("mongoose");
+import Joi from "joi";
+import mongoose from "mongoose";
 
 const presetExerciseSchema = new mongoose.Schema(
   {
@@ -69,5 +69,4 @@ function validatePresetExercises(presetExercises) {
   return Joi.validate(presetExercises, presetExercisesSchema);
 }
 
-exports.PresetExercise = PresetExercise;
-exports.validatePresetExercises = validatePresetExercises;
+export { presetExerciseSchema, PresetExercise, validatePresetExercises };

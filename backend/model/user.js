@@ -1,8 +1,11 @@
-require("dotenv").config();
-const jwt = require("jsonwebtoken");
-const Joi = require("joi");
-Joi.objectId = require("joi-objectid")(Joi);
-const mongoose = require("mongoose");
+import dotenv from "dotenv";
+import jwt from "jsonwebtoken";
+import Joi from "joi";
+import JoiObjectId from "joi-objectid";
+import mongoose from "mongoose";
+
+dotenv.config();
+Joi.objectId = JoiObjectId(Joi);
 
 const userSchema = new mongoose.Schema({
   firstName: {
@@ -68,5 +71,4 @@ function validateUser(user) {
   return Joi.validate(user, schema);
 }
 
-exports.User = User;
-exports.validate = validateUser;
+export { User, validateUser as validate };

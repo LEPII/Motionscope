@@ -1,5 +1,5 @@
-const Joi = require("joi");
-const mongoose = require("mongoose");
+import Joi from "joi";
+import mongoose from "mongoose";
 
 const programSchema = new mongoose.Schema({
   coach: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
@@ -9,4 +9,4 @@ const programSchema = new mongoose.Schema({
 
 const Program = mongoose.model("Program", programSchema);
 
-exports.Program = Program;
+export { Program };
