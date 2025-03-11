@@ -1,4 +1,3 @@
-import { Err } from "joi/lib/errors.js";
 import {
   Questionnaire,
   validate,
@@ -34,6 +33,7 @@ const updateQuestionnaire = async (req, res) => {
     update,
     { new: true }
   );
+
   if (!questionnaire) return res.status(404).send("Questionnaire not found");
 
   res.send(questionnaire);
