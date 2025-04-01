@@ -34,7 +34,22 @@ const questionnaireSchema = new mongoose.Schema({
   },
   desiredWeightClass: {
     type: String,
-    enum: ["59kg", "66kg", "74kg", "83kg", "93kg", "105kg", "120kg", "120kg+"],
+    enum: [
+      "44kg",
+      "48kg",
+      "52kg",
+      "56kg",
+      "60kg",
+      "67.5kg",
+      "75kg",
+      "82kg",
+      "90kg",
+      "100kg",
+      "110kg",
+      "125kg",
+      "140kg",
+      "140+kg",
+    ],
     required: true,
   },
   gymExperienceYears: {
