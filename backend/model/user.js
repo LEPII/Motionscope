@@ -47,6 +47,7 @@ const userSchema = new mongoose.Schema({
     minLength: 8,
     maxLength: 1024,
   },
+  role: { type: String, enum: ["coach", "athlete"], required: true },
 });
 
 userSchema.methods.generateAuthToken = function () {
