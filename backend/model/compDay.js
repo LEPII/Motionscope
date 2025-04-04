@@ -5,6 +5,7 @@ const attemptsSchema = new mongoose.Schema({
   set: Number,
   reps: Number,
   weight: Number,
+  actuallyAttempted: Boolean,
   record: Boolean,
 });
 
@@ -60,6 +61,7 @@ function validateAttempt(attempt) {
     set: Joi.number().required(),
     reps: Joi.number().required(),
     weight: Joi.number().required(),
+    actuallyAttempted: Joi.boolean().required(),
     record: Joi.boolean().required(),
   });
   return schema.validate(attempt);
