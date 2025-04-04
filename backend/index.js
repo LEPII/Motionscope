@@ -1,4 +1,4 @@
-// require("dotenv").config();
+import "dotenv/config";
 import "express-async-errors";
 import express from "express";
 import myRoutes from "./routes/routes.js";
