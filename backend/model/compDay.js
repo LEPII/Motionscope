@@ -118,4 +118,4 @@ function validateCompDay(compDay) {
   return schema.validate(compDay);
 }
 
-export { CompDay, validateAttempt, validateLiftAttempts, validateCompDay };
+export { CompDay, validateCompDay };

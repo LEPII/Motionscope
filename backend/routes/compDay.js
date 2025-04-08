@@ -1,3 +1,10 @@
+import {
+  getSingleCompDay,
+  getAllCompDays,
+  postCompDay,
+  updateCompDay,
+  deleteCompDay,
+} from "../controllers/compDay.js";
 import express from "express";
 const router = express.Router();
 
@@ -7,16 +14,16 @@ const router = express.Router();
 router.get("/:id", getSingleCompDay);
 
 // Get all CompDays from a Specific Athlete
-router.get("/", getAllCompDay);
+router.get("/", getAllCompDays);
 
 // Post a CompDay to a Specific Athlete
 router.post("/", postCompDay);
 
 // Update a Block from a Specific Athlete
-router.patch("/:compDayId", updateCompDay);
+router.patch("/:id", updateCompDay);
 
 // Delete a Block from a Specific Athlete
-router.delete("/:compDayId", deleteCompDay);
+router.delete("/:id", deleteCompDay);
 
 /// -- ATHLETE'S ENDPOINTS --
 
