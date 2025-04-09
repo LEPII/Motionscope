@@ -1,4 +1,4 @@
-import { CompDay, validateCompDay } from "../model/compDay";
+import { CompDay, validateCompDay } from "../model/compDay.js";
 
 const getSingleCompDay = async (req, res) => {
   const singleCompDay = await CompDay.findById(req.params.id);
