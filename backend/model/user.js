@@ -48,6 +48,12 @@ const userSchema = new mongoose.Schema({
     maxLength: 1024,
   },
   role: { type: String, enum: ["coach", "athlete"], required: true },
+  athletes: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
+  ],
 });
 
 userSchema.methods.generateAuthToken = function () {
@@ -60,16 +66,14 @@ userSchema.methods.generateAuthToken = function () {
 
 const User = mongoose.model("User", userSchema);
 
-function validateUser(user) {
-  const schema = {
-    firstName: Joi.string().min(1).max(30).required().trim(),
-    lastName: Joi.string().min(1).max(30).required().trim(),
-    username: Joi.string().min(5).max(30).required().trim(),
-    email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
-    password: Joi.string().required().min(8).max(1024),
-  };
+const validateUser = Joi.object({
+  firstName: Joi.string().min(1).max(50).required().trim(),
+  lastName: Joi.string().min(1).max(50).required().trim(),
+  username: Joi.string().min(5).max(30).required().trim(),
+  email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
+  password: Joi.string().min(8).max(1024).required(),
+  role: Joi.string().valid("coach", "athlete").required(),
+  athletes: Joi.array().items(Joi.string().hex().length(24)),
+});
 
-  return Joi.validate(user, schema);
-}
-
-export { User, validateUser as validate };
+export { User, validateUser };

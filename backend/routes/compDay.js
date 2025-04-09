@@ -27,13 +27,13 @@ router.delete("/:id", deleteCompDay);
 
 /// -- ATHLETE'S ENDPOINTS --
 
-// Get All CompDays
-router.get("/athletesCompDay", getAllAthleteCompDays);
+// // Get All CompDays
+// router.get("/athletesCompDay", getAllAthleteCompDays);
 
-// Get Current CompDay
-router.get("/:athletesCompDayId", getCompDay);
+// // Get Current CompDay
+// router.get("/:athletesCompDayId", getCompDay);
 
-// Update CompDay Exercise Detail (Only 2 fields - actuallyAttempted & record)
-router.patch("/:athletesCompDayId", updateAthleteCompDay);
+// // Update CompDay Exercise Detail (Only 2 fields - actuallyAttempted & record)
+// router.patch("/:athletesCompDayId", updateAthleteCompDay);
 
 export default router;

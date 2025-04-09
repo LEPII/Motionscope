@@ -2,7 +2,7 @@ import Joi from "joi";
 import bcrypt from "bcrypt";
 import { User } from "../model/user.js";
 
-const validate = (req) => {
+const validateAuth = (req) => {
   const schema = {
     email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
     password: Joi.string().required().min(8).max(1024),
@@ -14,7 +14,7 @@ const validate = (req) => {
 // logging in user
 
 const login = async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validateAuth(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await User.findOne({ email: req.body.email });
