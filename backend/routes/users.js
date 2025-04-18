@@ -9,11 +9,20 @@ import {
   deleteSelfFromTheCoachRoster,
 } from "../controllers/usersController.js";
 
-// get current user
-router.get("/me", auth, getCurrentUser);
+
+/// Open Routes 
 
 // register user
 router.post("/", registerUser);
+
+
+
+/// Secure Routes. 
+
+// get current user
+router.get("/me", auth, getCurrentUser);
+
+
 
 // -- COACH'S ENDPOINTS --
 

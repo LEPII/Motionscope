@@ -25,7 +25,8 @@ const liftAttemptsSchema = new mongoose.Schema({
 });
 
 const compDaySchema = new mongoose.Schema({
-  athleteId: {
+  coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  athlete: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -90,7 +91,10 @@ function validateLiftAttempts(liftAttempts) {
 
 function validateCompDay(compDay) {
   const schema = Joi.object({
-    athleteId: Joi.string()
+    coach: Joi.string()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .required(),
+    athlete: Joi.string()
       .pattern(/^[0-9a-fA-F]{24}$/)
       .required(),
     competitionName: Joi.string().required(),
