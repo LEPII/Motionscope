@@ -1,12 +1,18 @@
 import Joi from "joi";
 import mongoose from "mongoose";
 import JoiObjectId from "joi-objectid";
-import {customExerciseSchema} from "./customExercise.js";
+import { customExerciseSchema } from "./customExercise.js";
 import { presetExerciseSchema } from "./presetExercise.js";
 
 Joi.objectId = JoiObjectId(Joi);
 
 const blockSchema = new mongoose.Schema({
+  coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  athlete: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
   blockName: { type: String, minLength: 1, maxLength: 50, required: true },
   numberOfWeeks: {
     type: Number,
@@ -94,6 +100,12 @@ const Block = mongoose.model("Block", blockSchema);
 
 const validateBlock = (blockInfo) => {
   const blockSchema = {
+    coach: Joi.string()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .required(),
+    athlete: Joi.string()
+      .pattern(/^[0-9a-fA-F]{24}$/)
+      .required(),
     blockName: Joi.string().min(1).max(50).required(),
     numberOfWeeks: Joi.number().min(1).max(12).required(),
     blockStartDate: Joi.date()

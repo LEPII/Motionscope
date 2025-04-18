@@ -10,12 +10,12 @@ const router = express.Router();
 // -- COACH'S ENDPOINTS --
 
 // Get a specific Athlete's Questionnaire
-router.get("/:id", getQuestionnaire);
+router.get("/:athletesId", getQuestionnaire);
 
 /// -- ATHLETE'S ENDPOINTS --
 
 // Post Questionnaire
-router.post("/", auth, postQuestionnaire);
+router.post("/athlete", auth, postQuestionnaire);
 
 // Patch Questionnaire
 router.patch("/:id", auth, updateQuestionnaire);
