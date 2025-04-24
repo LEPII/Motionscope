@@ -1,5 +1,5 @@
 import { Block } from "../model/block.js";
-import { CustomExercise } from "../model/customExercise.js";
+import { CustomExercise } from "../model/exercise.js";
 import { PresetExercise } from "../model/presetExercise.js";
 
 /// -- COACH'S ENDPOINTS --
@@ -15,98 +15,106 @@ const getAllBlocks = async (req, res) => {
 };
 
 const postBlock = async (req, res) => {
-  try {
-    const { blockName, numberOfWeeks, blockStartDate, days, weeklySchedule } =
-      req.body;
+  // const { error, value } = validateBlock.validate(req.body);
 
-    // Batch Fetching All Custom Exercises
-    const customExercises = await CustomExercise.find();
-    const customExerciseMap = new Map(
-      customExercises.map((exercise) => [exercise._id.toString(), exercise])
-    );
+  if (error) {
+    return res.status(400).json({ error: error.details[0].message });
+  }
 
-    // Batch Fetching All Preset Exercises
-    const presetExercises = await PresetExercise.find();
-    const presetExerciseMap = new Map(
-      customExercises.map((exercise) => [exercise._id.toString(), exercise])
-    );
+  const {
+    coach,
+    athlete,
+    blockName,
+    numberOfWeeks,
+    blockStartDate,
+    days,
+    weeklySchedule,
+  } = value;
 
-    const newExercise = weeklySchedule.map((week) => {
-      week.dailySchedule.map((dailySchedule) => {
-        dailySchedule.customExercises.map((exercise) => {
-          if (exercise.presetId) {
-            const presetExercise = presetExerciseMap.get(
-              exercise.presetId.toString()
+  // Batch Fetching All Custom Exercises
+  const customExercises = await CustomExercise.find();
+  const customExerciseMap = new Map(
+    customExercises.map((exercise) => [exercise._id.toString(), exercise])
+  );
+
+  // Batch Fetching All Preset Exercises
+  const presetExercises = await PresetExercise.find();
+  const presetExerciseMap = new Map(
+    customExercises.map((exercise) => [exercise._id.toString(), exercise])
+  );
+
+  const newExercise = weeklySchedule.map((week) => {
+    week.dailySchedule.map((dailySchedule) => {
+      dailySchedule.customExercises.map((exercise) => {
+        if (exercise.presetId) {
+          const presetExercise = presetExerciseMap.get(
+            exercise.presetId.toString()
+          );
+          if (!presetExercise) {
+            throw new Error(
+              `Preset exercise with ID ${exercise.presetId} not founds`
             );
-            if (!presetExercise) {
-              throw new Error(
-                `Preset exercise with ID ${exercise.presetId} not founds`
-              );
-            }
-            return new CustomExercise({
-              name: presetExercise.name,
-              description: presetExercise.description,
-              sets: exercise.sets,
-              repsMin: exercise.repsMin || 0,
-              reps: exercise.reps,
-              prescribedLoadMin: exercise.prescribedLoadMin || 0,
-              prescribedLoad: exercise.prescribedLoad,
-              prescribedRPEMin: exercise.prescribedRPEMin || 0,
-              prescribedRPE: exercise.prescribedRPE,
-              cuesFromCoach: exercise.cuesFromCoach || "",
-              sideNote: exercise.sideNote || "",
-            });
-          } else if (exercise.CustomExerciseId) {
-            const customExercise = customExerciseMap.get(
-              exercise.customExerciseId.toString()
-            );
-            if (!customExercise) {
-              throw new Error(
-                `Custom exercise with ID ${exercise.customExerciseId} not found`
-              );
-            }
-            return new CustomExercise({
-              name: customExercise.name,
-              description: customExercise.description,
-              sets: exercise.sets,
-              repsMin: exercise.repsMin || 0,
-              reps: exercise.reps,
-              prescribedLoadMin: exercise.prescribedLoadMin || 0,
-              prescribedLoad: exercise.prescribedLoad,
-              prescribedRPEMin: exercise.prescribedRPEMin || 0,
-              prescribedRPE: exercise.prescribedRPE,
-              cuesFromCoach: exercise.cuesFromCoach || "",
-              sideNote: exercise.sideNote || "",
-            });
-          } else {
-            throw new Error("Invalid exercise type provided");
           }
-        });
+          return new CustomExercise({
+            name: presetExercise.name,
+            description: presetExercise.description,
+            sets: exercise.sets,
+            repsMin: exercise.repsMin || 0,
+            reps: exercise.reps,
+            prescribedLoadMin: exercise.prescribedLoadMin || 0,
+            prescribedLoad: exercise.prescribedLoad,
+            prescribedRPEMin: exercise.prescribedRPEMin || 0,
+            prescribedRPE: exercise.prescribedRPE,
+            cuesFromCoach: exercise.cuesFromCoach || "",
+            sideNote: exercise.sideNote || "",
+          });
+        } else if (exercise.CustomExerciseId) {
+          const customExercise = customExerciseMap.get(
+            exercise.customExerciseId.toString()
+          );
+          if (!customExercise) {
+            throw new Error(
+              `Custom exercise with ID ${exercise.customExerciseId} not found`
+            );
+          }
+          return new CustomExercise({
+            name: customExercise.name,
+            description: customExercise.description,
+            sets: exercise.sets,
+            repsMin: exercise.repsMin || 0,
+            reps: exercise.reps,
+            prescribedLoadMin: exercise.prescribedLoadMin || 0,
+            prescribedLoad: exercise.prescribedLoad,
+            prescribedRPEMin: exercise.prescribedRPEMin || 0,
+            prescribedRPE: exercise.prescribedRPE,
+            cuesFromCoach: exercise.cuesFromCoach || "",
+            sideNote: exercise.sideNote || "",
+          });
+        } else {
+          throw new Error("Invalid exercise type provided");
+        }
       });
     });
+  });
 
-    const newBlock = new Block({
-      blockName,
-      numberOfWeeks,
-      blockStartDate,
-      days,
-      weeklySchedule: weeklySchedule.map((week) => ({
-        weekStartDate: week.weekStartDate,
-        dailySchedule: week.dailySchedule.map((dailySchedule) => ({
-          primaryExercise: dailySchedule.primaryExercise,
-          customExercises: newExercise,
-        })),
+  const newBlock = new Block({
+    blockName,
+    numberOfWeeks,
+    blockStartDate,
+    days,
+    weeklySchedule: weeklySchedule.map((week) => ({
+      weekStartDate: week.weekStartDate,
+      dailySchedule: week.dailySchedule.map((dailySchedule) => ({
+        primaryExercise: dailySchedule.primaryExercise,
+        customExercises: newExercise,
       })),
-    });
+    })),
+  });
 
-    const savedBlock = await newBlock.save();
-    res
-      .status(201)
-      .json({ message: "Block Successfully Created", data: savedBlock });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Server Error" });
-  }
+  const savedBlock = await newBlock.save();
+  res
+    .status(201)
+    .json({ message: "Block Successfully Created", data: savedBlock });
 };
 
 const immutableFieldsForCoaches = [

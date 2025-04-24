@@ -47,7 +47,11 @@ const userSchema = new mongoose.Schema({
     minLength: 8,
     maxLength: 1024,
   },
-  role: { type: String, enum: ["coach", "athlete"], required: true },
+  role: {
+    type: String,
+    enum: ["coach", "athlete", "developer"],
+    required: true,
+  },
   athletes: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -72,7 +76,7 @@ const validateUser = Joi.object({
   username: Joi.string().min(5).max(30).required().trim(),
   email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
   password: Joi.string().min(8).max(1024).required(),
-  role: Joi.string().valid("coach", "athlete").required(),
+  role: Joi.string().valid("coach", "athlete", "developer").required(),
   athletes: Joi.array().items(Joi.string().hex().length(24)),
 });
 

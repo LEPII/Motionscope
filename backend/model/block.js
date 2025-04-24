@@ -1,10 +1,10 @@
 import Joi from "joi";
 import mongoose from "mongoose";
 import JoiObjectId from "joi-objectid";
-import { customExerciseSchema } from "./customExercise.js";
-import { presetExerciseSchema } from "./presetExercise.js";
+// import { customExerciseSchema } from "./exercise.js";
+// import { presetExerciseSchema } from "./presetExercise.js";
 
-Joi.objectId = JoiObjectId(Joi);
+const { ObjectId } = Joi.objectId().required();
 
 const blockSchema = new mongoose.Schema({
   coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -23,7 +23,6 @@ const blockSchema = new mongoose.Schema({
   blockStartDate: {
     type: Date,
     required: true,
-    unique: true,
     validate: {
       validator: function (value) {
         const today = new Date();
@@ -63,7 +62,6 @@ const blockSchema = new mongoose.Schema({
       weekStartDate: {
         type: Date,
         required: true,
-        unique: true,
       },
       dailySchedule: [
         {
@@ -88,8 +86,12 @@ const blockSchema = new mongoose.Schema({
               message: "Please select at least one title for the day.",
             },
           },
-          customExercises: [customExerciseSchema],
-          presetExercisesId: [presetExerciseSchema],
+          customExercisesId: [
+            { type: mongoose.Schema.Types.ObjectId, ref: "CustomExercise" },
+          ],
+          presetExercisesId: [
+            { type: mongoose.Schema.Types.ObjectId, ref: "PresetExercise" },
+          ],
         },
       ],
     },
@@ -98,74 +100,67 @@ const blockSchema = new mongoose.Schema({
 
 const Block = mongoose.model("Block", blockSchema);
 
-const validateBlock = (blockInfo) => {
-  const blockSchema = {
-    coach: Joi.string()
-      .pattern(/^[0-9a-fA-F]{24}$/)
-      .required(),
-    athlete: Joi.string()
-      .pattern(/^[0-9a-fA-F]{24}$/)
-      .required(),
-    blockName: Joi.string().min(1).max(50).required(),
-    numberOfWeeks: Joi.number().min(1).max(12).required(),
-    blockStartDate: Joi.date()
-      .default(null)
-      .required()
-      .allow(
-        (value) => value >= Date.now(),
-        "Start date must be today or in the future."
-      ),
-    days: Joi.array().items(
-      Joi.string().valid(
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday"
-      )
-    ),
-    weeklySchedule: Joi.array()
-      .items(
-        Joi.object({
-          weekStartDate: Joi.date(),
-          dailySchedule: Joi.array()
-            .items(
-              Joi.object({
-                primExercises: Joi.array().items(
-                  Joi.string().valid(
-                    "Primary Squat",
-                    "Secondary Squat",
-                    "Volume Squat",
-                    "Primary Bench",
-                    "Secondary Bench",
-                    "Volume Bench",
-                    "Primary Deadlift",
-                    "Secondary Deadlift",
-                    "Volume Deadlift"
-                  )
-                ),
-                customExercises: Joi.array().items(ObjectId()).optional(),
-                presetExercisesId: Joi.array().items(ObjectId()).optional(),
-                customExercises: Joi.when("presetExercisesId", {
-                  is: Joi.array().length(0),
-                  then: Joi.array().items(ObjectId()).min(1),
-                }),
-                presetExercisesId: Joi.when("customExercises", {
-                  is: Joi.array().length(0),
-                  then: Joi.array().items(ObjectId()).min(1),
-                }),
-              })
-            )
-            .min(1)
-            .required(),
-        })
-      )
-      .min(1)
-      .required(),
-  };
-  return Joi.validate(blockInfo, blockSchema);
-};
+// const validateBlock = Joi.object({
+//   coach: Joi.objectId().required(),
+//   coach: Joi.objectId().required(),
+//   blockName: Joi.string().min(1).max(50).required(),
+//   numberOfWeeks: Joi.number().min(1).max(12).required(),
+//   blockStartDate: Joi.date()
+//     .default(() => new Date())
+//     .required()
+//     .greater("now")
+//     .message("Start date must be today or in the future."),
+//   days: Joi.array().items(
+//     Joi.string().valid(
+//       "Sunday",
+//       "Monday",
+//       "Tuesday",
+//       "Wednesday",
+//       "Thursday",
+//       "Friday",
+//       "Saturday"
+//     )
+//   ),
+//   weeklySchedule: Joi.array()
+//     .items(
+//       Joi.object({
+//         weekStartDate: Joi.date().required,
+//         dailySchedule: Joi.array()
+//           .items(
+//             Joi.object({
+//               primExercises: Joi.array()
+//                 .items(
+//                   Joi.string().valid(
+//                     "Primary Squat",
+//                     "Secondary Squat",
+//                     "Volume Squat",
+//                     "Primary Bench",
+//                     "Secondary Bench",
+//                     "Volume Bench",
+//                     "Primary Deadlift",
+//                     "Secondary Deadlift",
+//                     "Volume Deadlift"
+//                   )
+//                 )
+//                 .optional(),
+//               customExercisesId: Joi.array().items(ObjectId).optional(),
+//               presetExercisesId: Joi.array().items(ObjectId).optional(),
+//               customExercisesId: Joi.when("presetExercisesId", {
+//                 is: Joi.array().length(0),
+//                 then: Joi.array().items(ObjectId).min(1),
+//               }).optional(),
+//               presetExercisesId: Joi.when("customExercisesId", {
+//                 is: Joi.array().length(0),
+//                 then: Joi.array().items(ObjectId).min(1),
+//               }).optional(),
+//             })
+//           )
+//           .min(1)
+//           .required(),
+//       })
+//     )
+//     .min(1)
+//     .required(),
+// });
 
-export { Block, validateBlock };
+export { Block };
