@@ -97,44 +97,128 @@ const postExercise = async (req, res) => {
 };
 
 const updateExercise = async (req, res) => {
-  const { error } = validateExercises(req.body);
+  const { error } = validateExercises.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { name, description, muscleGroup } = req.body;
+  const exerciseId = req.params.id;
+  const user = req.user;
 
-  const updatedExercise = {
-    $set: {
-      name,
-      description,
-      muscleGroup,
-    },
-  };
+  const exerciseToUpdate = await Exercise.findById(exerciseId);
 
-  const exercise = await Exercise.findByIdAndUpdate(
-    req.params.id,
-    updatedExercise,
-    { new: true }
-  );
+  if (!exerciseToUpdate) {
+    return res.status(404).send("Exercise not found");
+  }
 
-  if (!exercise) return res.status(404).send("exercise not found");
+  const updates = {};
+  if (req.body.name !== undefined) {
+    updates.name = req.body.name;
+  }
+  if (req.body.description !== undefined) {
+    updates.description = req.body.description;
+  }
+  if (req.body.muscleGroup !== undefined) {
+    updates.muscleGroup = req.body.muscleGroup;
+  }
 
-  res.send(exercise);
+  if (Object.keys(updates).length === 0) {
+    return res
+      .status(400)
+      .send(
+        "No valid fields to update provided (name is required for editing)."
+      );
+  }
+
+  if (user.role === "coach") {
+    if (
+      exerciseToUpdate.type === "custom" &&
+      exerciseToUpdate.createdBy &&
+      exerciseToUpdate.createdBy.equals(user._id)
+    ) {
+      const exercise = await Exercise.findByIdAndUpdate(
+        exerciseId,
+        { $set: updates },
+        { new: true, runValidators: true }
+      );
+      return res.send(exercise);
+    } else {
+      return res
+        .status(403)
+        .send(
+          "Unauthorized. Coaches can only edit the name, description, and muscleGroup of their own custom exercises."
+        );
+    }
+  } else if (user.role === "developer") {
+    if (exerciseToUpdate.type === "preset") {
+      const exercise = await Exercise.findByIdAndUpdate(
+        exerciseId,
+        { $set: updates },
+        { new: true, runValidators: true }
+      );
+      return res.send(exercise);
+    } else {
+      return res
+        .status(403)
+        .send(
+          "Unauthorized. Developers can only edit the name, description, and muscleGroup of preset exercises."
+        );
+    }
+  } else {
+    return res
+      .status(403)
+      .send(
+        "Unauthorized. Only coaches and developers can edit the name, description, and muscleGroup of exercises."
+      );
+  }
 };
 
 const deleteExercise = async (req, res) => {
-  try {
-    const { id } = req.params;
+  const { id } = req.params;
+  const user = req.user;
 
-    const deletedExercise = await Exercise.findByIdAndRemove(id);
+  const exerciseToDelete = await Exercise.findById(id);
 
-    if (!deletedExercise) {
-      return res.status(404).json({ message: "Exercise not found" });
+  if (!exerciseToDelete) {
+    return res.status(404).json({ message: "Exercise Not Found" });
+  }
+
+  if (user.role === "coach") {
+    if (
+      exerciseToDelete.type === "custom" &&
+      exerciseToDelete.createdBy &&
+      exerciseToDelete.createdBy.equals(user._id)
+    ) {
+      const deletedExercise = await Exercise.findByIdAndDelete(id);
+      if (!deletedExercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      return res
+        .status(200)
+        .json({ message: "Custom exercise deleted successfully" });
+    } else {
+      return res.status(403).json({
+        message:
+          "Unauthorized. Coaches can only delete their own custom exercises.",
+      });
     }
-
-    res.status(200).json({ message: "Exercise deleted successfully" });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Internal server error" });
+  } else if (user.role === "developer") {
+    if (exerciseToDelete.type === "preset") {
+      const deletedExercise = await Exercise.findByIdAndDelete(id);
+      if (!deletedExercise) {
+        return res.status(404).json({ message: "Exercise not found" });
+      }
+      return res
+        .status(200)
+        .json({ message: "Preset exercise deleted successfully" });
+    } else {
+      return res.status(403).json({
+        message: "Unauthorized. Developers can only delete preset exercises.",
+      });
+    }
+  } else {
+    return res.status(403).json({
+      message:
+        "Unauthorized. Only coaches and developers can delete exercises.",
+    });
   }
 };
 
