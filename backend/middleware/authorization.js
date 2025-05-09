@@ -2,8 +2,24 @@ import { User } from "../model/user.js";
 import { Block } from "../model/block.js";
 import { CompDay } from "../model/compDay.js";
 
+const authorizeAthlete = (req, res, next) => {
+  if (req.user && req.user.role === "athlete") {
+    next();
+  } else {
+    res.status(403).send("Unauthorized. Athlete's only.");
+  }
+};
+
 const authorizeCoach = (req, res, next) => {
   if (req.user && req.user.role === "coach") {
+    next();
+  } else {
+    res.status(403).send("Unauthorized. Coaches only.");
+  }
+};
+
+const authorizeDeveloper = (req, res, next) => {
+  if (req.user && req.user.role === "developer") {
     next();
   } else {
     res.status(403).send("Unauthorized. Coaches only.");
@@ -87,7 +103,9 @@ const authorizeAthleteForResource = async (req, res, next) => {
 };
 
 export {
+  authorizeAthlete,
   authorizeCoach,
+  authorizeDeveloper,
   authorizeCoachForAthleteResource,
   authorizeAthleteForResource,
 };

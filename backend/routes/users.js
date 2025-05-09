@@ -9,20 +9,15 @@ import {
   deleteSelfFromTheCoachRoster,
 } from "../controllers/usersController.js";
 
-
-/// Open Routes 
+/// Open Routes
 
 // register user
 router.post("/", registerUser);
 
-
-
-/// Secure Routes. 
+/// Secure Routes.
 
 // get current user
 router.get("/me", auth, getCurrentUser);
-
-
 
 // -- COACH'S ENDPOINTS --
 
@@ -35,7 +30,8 @@ router.delete("/coaches/roster", deleteAthleteFromRoster);
 
 // -- ATHLETE'S ENDPOINTS --
 
-router.delete("/athlete/roster", deleteSelfFromTheCoachRoster);
+// Delete Self from Roster
 
+router.delete("/athlete/roster", deleteSelfFromTheCoachRoster);
 
 export default router;

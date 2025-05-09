@@ -1,4 +1,6 @@
+import { Mongoose } from "mongoose";
 import { CompDay, validateCompDay } from "../model/compDay.js";
+import { Program } from "../model/program.js";
 
 const getSingleCompDay = async (req, res) => {
   const singleCompDay = await CompDay.findById(req.params.id);
@@ -16,11 +18,32 @@ const getAllCompDays = async (req, res) => {
 };
 
 const postCompDay = async (req, res) => {
-  const { error } = validateCompDay(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  const { error, value: compDayData } = validateCompDay(req.body);
+  if (error)
+    return res
+      .status(400)
+      .json({ message: "Invalid CompDay data", error: error.details });
 
-  const savedCompDay = await new CompDay(req.body).save();
-  res.status(201).send(savedCompDay);
+  const { programId } = req.body;
+
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  const program = await Program.findById(programId).session(session);
+  if (!program) {
+    return res.status(404).json({ message: "Program not found" });
+  }
+
+  const newCompDay = new CompDay(compDayData);
+  const savedCompDay = await newCompDay.save();
+
+  program.compDays.push(savedCompDay._id);
+  await program.save();
+
+  res.status(201).json({
+    message: "CompDay created and added to Program",
+    compDay: savedCompDay,
+  });
 };
 
 const updateCompDay = async (req, res) => {

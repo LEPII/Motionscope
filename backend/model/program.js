@@ -2,8 +2,12 @@ import Joi from "joi";
 import mongoose from "mongoose";
 
 const programSchema = new mongoose.Schema({
-  coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
-  athlete: {
+  coachId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  athleteId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true,
@@ -15,14 +19,14 @@ const programSchema = new mongoose.Schema({
 const Program = mongoose.model("Program", programSchema);
 
 const validateProgram = Joi.object({
-  coach: Joi.string()
+  coachId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required()
     .messages({
       "string.pattern.base": "Coach must be a valid ObjectId",
       "any.required": "Coach is required",
     }),
-  athlete: Joi.string()
+  athleteId: Joi.string()
     .pattern(/^[0-9a-fA-F]{24}$/)
     .required()
     .messages({
@@ -42,4 +46,4 @@ const validateProgram = Joi.object({
     }),
 });
 
-export { Program };
+export { Program, validateProgram };
