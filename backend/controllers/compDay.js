@@ -1,4 +1,3 @@
-import { Mongoose } from "mongoose";
 import { CompDay, validateCompDay } from "../model/compDay.js";
 import { Program } from "../model/program.js";
 
@@ -12,9 +11,21 @@ const getSingleCompDay = async (req, res) => {
   res.send(singleCompDay);
 };
 
-const getAllCompDays = async (req, res) => {
-  const allCompDays = await CompDay.find();
-  res.send(allCompDays);
+const getAllCompDaysForAthlete = async (req, res) => {
+  const { athleteId } = req.params;
+
+  const program = await Program.findOne({ athleteId });
+  if (!program) {
+    return res
+      .status(404)
+      .json({ message: "Program not found for this athlete" });
+  }
+
+  const allCompDays = await CompDay.find({ _id: { $in: program.compDays } });
+  res.status(200).json({
+    message: "CompDays for athlete retrieved successfully",
+    allCompDays,
+  });
 };
 
 const postCompDay = async (req, res) => {
@@ -25,25 +36,33 @@ const postCompDay = async (req, res) => {
       .json({ message: "Invalid CompDay data", error: error.details });
 
   const { programId } = req.body;
-
   const session = await mongoose.startSession();
   session.startTransaction();
 
-  const program = await Program.findById(programId).session(session);
-  if (!program) {
-    return res.status(404).json({ message: "Program not found" });
+  try {
+    const program = await Program.findById(programId).session(session);
+    if (!program) {
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(404).json({ message: "Program not found" });
+    }
+
+    const newCompDay = new CompDay(compDayData);
+    const savedCompDay = await newCompDay.save({ session });
+
+    program.compDays.push(savedCompDay._id);
+    await program.save({ session });
+
+    res.status(201).json({
+      message: "CompDay created and added to Program",
+      compDay: savedCompDay,
+    });
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession;
   }
-
-  const newCompDay = new CompDay(compDayData);
-  const savedCompDay = await newCompDay.save();
-
-  program.compDays.push(savedCompDay._id);
-  await program.save();
-
-  res.status(201).json({
-    message: "CompDay created and added to Program",
-    compDay: savedCompDay,
-  });
 };
 
 const updateCompDay = async (req, res) => {
@@ -75,7 +94,7 @@ const deleteCompDay = async (req, res) => {
 
 export {
   getSingleCompDay,
-  getAllCompDays,
+  getAllCompDaysForAthlete,
   postCompDay,
   updateCompDay,
   deleteCompDay,

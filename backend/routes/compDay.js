@@ -1,6 +1,6 @@
 import {
   getSingleCompDay,
-  getAllCompDays,
+  getAllCompDaysForAthlete,
   postCompDay,
   updateCompDay,
   deleteCompDay,
@@ -14,7 +14,7 @@ const router = express.Router();
 router.get("/:athleteId/:compDayId", getSingleCompDay);
 
 // Get all CompDays from a Specific Athlete
-router.get("/", getAllCompDays);
+router.get("/", getAllCompDaysForAthlete);
 
 // Post a CompDay to a Specific Athlete
 router.post("/", postCompDay);
