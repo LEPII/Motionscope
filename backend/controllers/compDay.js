@@ -1,14 +1,33 @@
 import { CompDay, validateCompDay } from "../model/compDay.js";
 import { Program } from "../model/program.js";
 
-const getSingleCompDay = async (req, res) => {
-  const singleCompDay = await CompDay.findById(req.params.id);
+// -- COACH'S ENDPOINTS --
 
-  if (!singleCompDay) {
-    return res.status(404).send("Competition day not found.");
+const getSingleCompDayForAthlete = async (req, res) => {
+  const { athleteId, compDayId } = req.params;
+
+  const program = await Program.findOne({ athleteId });
+  if (!program) {
+    return res
+      .status(404)
+      .json({ message: "Program not found for this athlete" });
   }
 
-  res.send(singleCompDay);
+  if (!program.compDays.includes(compDayId)) {
+    return res
+      .status(400)
+      .json({ message: "CompDay does not belong to this athlete's program." });
+  }
+
+  const singleCompDay = await CompDay.findById(compDayId);
+
+  if (!singleCompDay) {
+    return res.status(404).json({ message: "CompDay not found" });
+  }
+
+  res
+    .status(200)
+    .json({ message: "CompDay retrieved successfully", singleCompDay });
 };
 
 const getAllCompDaysForAthlete = async (req, res) => {
@@ -92,10 +111,58 @@ const deleteCompDay = async (req, res) => {
   res.status(204).send();
 };
 
+/// -- ATHLETE'S ENDPOINTS --
+
+const getAthleteCompDay = async (req, res) => {
+  const athleteId = req.user._id;
+  const { compDayId } = req.params;
+
+  const program = await Program.findOne({ athleteId });
+  if (!program) {
+    return res
+      .status(404)
+      .json({ message: "Program not found for this athlete" });
+  }
+
+  if (!program.compDays.includes(compDayId)) {
+    return res
+      .status(400)
+      .json({ message: "CompDay does not belong to this athlete's program." });
+  }
+
+  const compDay = await CompDay.findById(compDayId);
+  if (!compDay) {
+    return res.status(404).json({ message: "CompDay not found" });
+  }
+
+  res
+    .status(200)
+    .json({ message: "Athlete CompDay retrieved successfully", compDay });
+};
+
+const getAllAthleteCompDays = async (req, res) => {
+  const athleteId = req.user._id;
+
+  const program = await Program.findOne({ athleteId });
+  if (!program) {
+    return res
+      .status(404)
+      .json({ message: "Program not found for this athlete" });
+  }
+
+  const compDays = await CompDay.find({ _id: { $in: program.compDays } });
+
+  res
+    .status(200)
+    .json({ message: "Athlete CompDays retrieved successfully", compDays });
+};
+
 export {
-  getSingleCompDay,
+  getSingleCompDayForAthlete,
   getAllCompDaysForAthlete,
   postCompDay,
   updateCompDay,
   deleteCompDay,
+  getAthleteCompDay,
+  getAllAthleteCompDays,
 };

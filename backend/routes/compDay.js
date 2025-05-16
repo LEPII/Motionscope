@@ -1,9 +1,11 @@
 import {
-  getSingleCompDay,
+  getSingleCompDayForAthlete,
   getAllCompDaysForAthlete,
   postCompDay,
   updateCompDay,
   deleteCompDay,
+  getAthleteCompDay,
+  getAllAthleteCompDays,
 } from "../controllers/compDay.js";
 import express from "express";
 const router = express.Router();
@@ -11,7 +13,7 @@ const router = express.Router();
 // -- COACH'S ENDPOINTS --
 
 // Get a Single CompDay from a Specific Athlete
-router.get("/:athleteId/:compDayId", getSingleCompDay);
+router.get("/:athleteId/:compDayId", getSingleCompDayForAthlete);
 
 // Get all CompDays from a Specific Athlete
 router.get("/", getAllCompDaysForAthlete);
@@ -27,13 +29,13 @@ router.delete("/:athleteId/:compDayId", deleteCompDay);
 
 /// -- ATHLETE'S ENDPOINTS --
 
+// Get Current CompDay
+router.get("/athletes/:compDayId", getAthleteCompDay);
+
 // // Get All CompDays
-// router.get("/athletes/compDays", getAllAthleteCompDays);
+router.get("/athletes", getAllAthleteCompDays);
 
-// // Get Current CompDay
-// router.get("/athletes/:compDayId", getCompDay);
-
-// // Update CompDay Exercise Detail (Only 2 fields - actuallyAttempted & record)
+// // Update CompDay Exercise Detail (Only 1 field - actuallyAttempted)
 // router.patch("/athletes/:compDayId", updateAthleteCompDay);
 
 export default router;
