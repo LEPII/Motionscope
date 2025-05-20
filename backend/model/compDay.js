@@ -89,37 +89,34 @@ function validateLiftAttempts(liftAttempts) {
   return schema.validate(liftAttempts);
 }
 
-function validateCompDay(compDay) {
-  const schema = Joi.object({
-    coach: Joi.string()
-      .pattern(/^[0-9a-fA-F]{24}$/)
-      .required(),
-    athlete: Joi.string()
-      .pattern(/^[0-9a-fA-F]{24}$/)
-      .required(),
-    competitionName: Joi.string().required(),
-    date: Joi.date().required(),
-    weightClass: Joi.string()
-      .valid(
-        "44kg",
-        "48kg",
-        "52kg",
-        "56kg",
-        "60kg",
-        "67.5kg",
-        "75kg",
-        "82kg",
-        "90kg",
-        "100kg",
-        "110kg",
-        "125kg",
-        "140kg",
-        "140+kg"
-      )
-      .required(),
-    lifts: Joi.array().items(validateLiftAttempts(Joi.any()).schema).required(),
-  });
-  return schema.validate(compDay);
-}
+const validateCompDay = Joi.object({
+  coach: Joi.string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .required(),
+  athlete: Joi.string()
+    .regex(/^[0-9a-fA-F]{24}$/)
+    .required(),
+  competitionName: Joi.string().required(),
+  date: Joi.date().required(),
+  weightClass: Joi.string()
+    .valid(
+      "44kg",
+      "48kg",
+      "52kg",
+      "56kg",
+      "60kg",
+      "67.5kg",
+      "75kg",
+      "82kg",
+      "90kg",
+      "100kg",
+      "110kg",
+      "125kg",
+      "140kg",
+      "140+kg"
+    )
+    .required(),
+  lifts: Joi.array().items(validateLiftAttempts(Joi.any()).schema).required(),
+});
 
 export { CompDay, validateCompDay };

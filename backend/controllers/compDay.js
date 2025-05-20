@@ -48,7 +48,7 @@ const getAllCompDaysForAthlete = async (req, res) => {
 };
 
 const postCompDay = async (req, res) => {
-  const { error, value: compDayData } = validateCompDay(req.body);
+  const { error, value: compDayData } = validateCompDay.validate(req.body);
   if (error)
     return res
       .status(400)
@@ -84,19 +84,69 @@ const postCompDay = async (req, res) => {
   }
 };
 
-const updateCompDay = async (req, res) => {
-  const { error } = validateCompDay(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+const updateCoachCompDay = async (req, res) => {
+  const { compDayId } = req.params;
+  const updates = req.body;
 
-  const updatedCompDay = await CompDay.findByIdAndUpdate(
-    req.params.id,
-    req.body,
-    { new: true, runValidators: true }
-  );
+  const { error: compDayError } = validateCompDay.validate(updates);
+  if (compDayError)
+    return res
+      .status(400)
+      .json({ message: "Invalid attempt data", error: compDayError.details });
 
-  if (!updatedCompDay) {
+  const compDay = await CompDay.findById(compDayId);
+  if (!compDay) {
     return res.status(404).send("Competition day not found.");
   }
+
+  // This prevents the coach from updating 'actuallyAttempted' within any attempt
+  if (req.body.lifts) {
+    for (let lift of req.body.lifts) {
+      if (lift.attempts) {
+        if (
+          lift.attempts.first &&
+          lift.attempts.first.actuallyAttempted !== undefined
+        ) {
+          return res
+            .status(400)
+            .send(
+              "Coaches cannot update the 'actuallyAttempted' field of first attempt."
+            );
+        }
+        if (lift.attempts.second) {
+          for (let secondAttempt of lift.attempts.second) {
+            if (secondAttempt.actuallyAttempted !== undefined) {
+              return res
+                .status(400)
+                .send(
+                  "Coaches cannot update the 'actuallyAttempted' field of second attempt."
+                );
+            }
+          }
+        }
+        if (lift.attempts.third) {
+          for (let thirdAttempt of lift.attempts.third) {
+            if (thirdAttempt.actuallyAttempted !== undefined) {
+              return res
+                .status(400)
+                .send(
+                  "Coaches cannot update the 'actuallyAttempted' field of third attempt."
+                );
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const updatedCompDay = await CompDay.findByIdAndUpdate(
+    compDayId,
+    { $set: updates },
+    {
+      new: true,
+      runValidators: true,
+    }
+  );
 
   res.status(200).send(updatedCompDay);
 };
@@ -157,12 +207,64 @@ const getAllAthleteCompDays = async (req, res) => {
     .json({ message: "Athlete CompDays retrieved successfully", compDays });
 };
 
+const updateAthleteCompDay = async (req, res) => {
+  const { compDayId, liftName, attemptNumber, attemptIndex } = req.params;
+  const { actuallyAttempted } = req.body;
+
+  // Joi Validation
+  const { error: attemptError } = attemptSchema.validate({ actuallyAttempted });
+  if (attemptError) {
+    return res
+      .status(400)
+      .json({ message: "Invalid attempt data", error: attemptError.details });
+  }
+
+  const compDay = await CompDay.findById(compDayId);
+  if (!compDay) {
+    return res.status(404).send("Competition Day not found");
+  }
+
+  // Find the lift
+  const lift = compDay.lifts.find((l) => l.name === liftName);
+  if (!lift) {
+    return res.status(404).send(`Lift ${liftName} not found`);
+  }
+
+  let attemptArray;
+  let index = parseInt(attemptIndex, 10);
+
+  switch (attemptNumber.toLowerCase()) {
+    case "first":
+      attemptArray = [lift.attempts.first];
+      index = 0;
+      break;
+    case "second":
+      attemptArray = lift.attempts.second;
+      break;
+    case "third":
+      attemptArray = lift.attempts.third;
+      break;
+    default:
+      return res.status(400).send("Invalid attempt number");
+  }
+
+  if (!attemptArray || index < 0 || index >= attemptArray.length) {
+    return res.status(404).send("Attempt not found");
+  }
+
+  attemptArray[index].actuallyAttempted = actuallyAttempted;
+
+  await compDay.save();
+  res.status(200).send(compDay);
+};
+
 export {
   getSingleCompDayForAthlete,
   getAllCompDaysForAthlete,
   postCompDay,
-  updateCompDay,
+  updateCoachCompDay,
   deleteCompDay,
   getAthleteCompDay,
   getAllAthleteCompDays,
+  updateAthleteCompDay,
 };

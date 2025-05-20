@@ -2,10 +2,11 @@ import {
   getSingleCompDayForAthlete,
   getAllCompDaysForAthlete,
   postCompDay,
-  updateCompDay,
+  updateCoachCompDay,
   deleteCompDay,
   getAthleteCompDay,
   getAllAthleteCompDays,
+  updateAthleteCompDay,
 } from "../controllers/compDay.js";
 import express from "express";
 const router = express.Router();
@@ -21,10 +22,10 @@ router.get("/", getAllCompDaysForAthlete);
 // Post a CompDay to a Specific Athlete
 router.post("/", postCompDay);
 
-// Update a Block from a Specific Athlete
-router.patch("/:athleteId/:compDayId", updateCompDay);
+// Update a CompDay from a Specific Athlete
+router.patch("/:compDayId", updateCoachCompDay);
 
-// Delete a Block from a Specific Athlete
+// Delete a CompDay from a Specific Athlete
 router.delete("/:athleteId/:compDayId", deleteCompDay);
 
 /// -- ATHLETE'S ENDPOINTS --
@@ -32,10 +33,13 @@ router.delete("/:athleteId/:compDayId", deleteCompDay);
 // Get Current CompDay
 router.get("/athletes/:compDayId", getAthleteCompDay);
 
-// // Get All CompDays
+// Get All CompDays
 router.get("/athletes", getAllAthleteCompDays);
 
-// // Update CompDay Exercise Detail (Only 1 field - actuallyAttempted)
-// router.patch("/athletes/:compDayId", updateAthleteCompDay);
+// Update CompDay Exercise Detail (Only 1 field - actuallyAttempted)
+router.patch(
+  ":compDayId/lifts/:liftsName/:attemptNumber/:attemptIndex/athlete",
+  updateAthleteCompDay
+);
 
 export default router;
