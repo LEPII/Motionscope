@@ -57,37 +57,31 @@ const compDaySchema = new mongoose.Schema({
 
 const CompDay = mongoose.model("Competition Day", compDaySchema);
 
-function validateAttempt(attempt) {
-  const schema = Joi.object({
-    set: Joi.number().required(),
-    reps: Joi.number().required(),
-    weight: Joi.number().required(),
-    actuallyAttempted: Joi.boolean().required(),
-    record: Joi.boolean().required(),
-  });
-  return schema.validate(attempt);
-}
+const validateAttempt = Joi.object({
+  set: Joi.number().required(),
+  reps: Joi.number().required(),
+  weight: Joi.number().required(),
+  actuallyAttempted: Joi.boolean().required(),
+  record: Joi.boolean().required(),
+});
 
-function validateLiftAttempts(liftAttempts) {
-  const schema = Joi.object({
-    name: Joi.string().valid("Squat", "Bench", "Deadlift").required(),
-    warmUps: Joi.array()
-      .items(
-        Joi.object({
-          set: Joi.number().required(),
-          reps: Joi.number().required(),
-          weight: Joi.number().required(),
-        })
-      )
-      .required(),
-    attempts: Joi.object({
-      first: validateAttempt(Joi.any()).schema.required(),
-      second: Joi.array().items(validateAttempt(Joi.any()).schema).required(),
-      third: Joi.array().items(validateAttempt(Joi.any()).schema).required(),
-    }).required(),
-  });
-  return schema.validate(liftAttempts);
-}
+const validateLiftAttempts = Joi.object({
+  name: Joi.string().valid("Squat", "Bench", "Deadlift").required(),
+  warmUps: Joi.array()
+    .items(
+      Joi.object({
+        set: Joi.number().required(),
+        reps: Joi.number().required(),
+        weight: Joi.number().required(),
+      })
+    )
+    .required(),
+  attempts: Joi.object({
+    first: validateAttempt.required(), 
+    second: Joi.array().items(validateAttempt).required(), 
+    third: Joi.array().items(validateAttempt).required(),
+  }).required(),
+});
 
 const validateCompDay = Joi.object({
   coach: Joi.string()
@@ -116,7 +110,7 @@ const validateCompDay = Joi.object({
       "140+kg"
     )
     .required(),
-  lifts: Joi.array().items(validateLiftAttempts(Joi.any()).schema).required(),
+  lifts: Joi.array().items(validateLiftAttempts).required(),
 });
 
 export { CompDay, validateCompDay };
