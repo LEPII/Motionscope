@@ -2,7 +2,7 @@ import blockValidation from "../middleware/blockMiddleware.js";
 import {
   getSingleBlock,
   getAllBlocks,
-  postBlock,
+  // postBlock,
   updateBlock,
   deleteBlock,
   postTemplateBlock,
@@ -22,7 +22,7 @@ router.get("/:athleteId/:blockId", getSingleBlock);
 router.get("/:athleteId", getAllBlocks);
 
 // Post a Block to a Specific Athlete
-router.post("/:athleteId", blockValidation, postBlock);
+// router.post("/:athleteId", blockValidation, postBlock);
 
 // Update a Block from a Specific Athlete
 router.patch("/:athleteId/:blockId", blockValidation, updateBlock);
