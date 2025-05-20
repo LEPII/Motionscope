@@ -20,14 +20,14 @@ const Program = mongoose.model("Program", programSchema);
 
 const validateProgram = Joi.object({
   coachId: Joi.string()
-    .pattern(/^[0-9a-fA-F]{24}$/)
+    .regex(/^[0-9a-fA-F]{24}$/)
     .required()
     .messages({
       "string.pattern.base": "Coach must be a valid ObjectId",
       "any.required": "Coach is required",
     }),
   athleteId: Joi.string()
-    .pattern(/^[0-9a-fA-F]{24}$/)
+    .regex(/^[0-9a-fA-F]{24}$/)
     .required()
     .messages({
       "string.pattern.base": "Athlete must be a valid ObjectId",
