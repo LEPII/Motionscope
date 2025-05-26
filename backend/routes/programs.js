@@ -1,4 +1,4 @@
-import { postProgram } from "../model/program.js";
+import { postProgram } from "../controllers/programController.js";
 import express from "express";
 const router = express.Router();
 
