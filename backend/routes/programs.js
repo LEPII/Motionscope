@@ -1,14 +1,15 @@
-// const { Program, validate } = require("../model/program.js");
+import { postProgram } from "../model/program.js";
 import express from "express";
 const router = express.Router();
 
 // -- COACH'S ENDPOINTS --
 
-// Get All Athletes/Programs
+// Get List of All Athletes
 
 // Get a Single Program from a specific Athlete - (Which will then show a preview of all blocks)
 
 // Post a Program - Must have no more / no less than 1 athlete associated
+router.post("/", postProgram);
 
 // Update a Program
 
