@@ -1,10 +1,6 @@
 import Joi from "joi";
 import mongoose from "mongoose";
 import JoiObjectId from "joi-objectid";
-// import { customExerciseSchema } from "./exercise.js";
-// import { presetExerciseSchema } from "./presetExercise.js";
-
-const { ObjectId } = Joi.objectId().required();
 
 const blockSchema = new mongoose.Schema({
   coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -23,20 +19,58 @@ const blockSchema = new mongoose.Schema({
   blockStartDate: {
     type: Date,
     required: true,
-    validate: {
-      validator: function (value) {
-        const today = new Date();
-        return value >= today;
+    validate: [
+      {
+        validator: function (value) {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const startDate = new Date(value);
+          startDate.setHours(0, 0, 0, 0);
+          return startDate >= today;
+        },
+        message: "Block start date must be today or in the future.",
       },
-      message: "Block start date must be today or in the future.",
-    },
-    validate: {
-      validator: function (value) {
-        const dayOfWeek = value.getDay();
-        return dayOfWeek === 0;
+      {
+        validator: function (value) {
+          const dayOfWeek = value.getDay();
+          return dayOfWeek === 0;
+        },
+        message: "Block start date must be a Sunday.",
       },
-      message: "Block start date must be a Sunday.",
-    },
+    ],
+  },
+  blockEndDate: {
+    type: Date,
+    required: true,
+    validate: [
+      {
+        validator: function (value) {
+          if (!this.blockStartDate || !this.numberOfWeeks) {
+            return true;
+          }
+          const expectedEndDate = new Date(this.blockStartDate);
+          // adds the starts date + the length of the block
+          expectedEndDate.setDate(
+            expectedEndDate.getDate() + this.numberOfWeeks * 7 - 1
+          );
+          const actualEndDate = new Date(value);
+          actualEndDate.setHours(0, 0, 0, 0);
+          expectedEndDate.setHours(0, 0, 0, 0);
+          // compares the ACTUAL end date provided by the user
+          // WITH the EXPECTED end date calculated above.
+          return actualEndDate.getTime() === expectedEndDate.getTime();
+        },
+        message:
+          "Block end date does not match the block start date and number of weeks selected.",
+      },
+      {
+        validator: function (value) {
+          const dayOfWeek = value.getDay();
+          return dayOfWeek === 6;
+        },
+        message: "Block end date must be a Saturday.",
+      },
+    ],
   },
   days: {
     type: [String],
