@@ -1,10 +1,14 @@
-import { postProgram } from "../controllers/programController.js";
+import {
+  postProgram,
+  getRosterList,
+} from "../controllers/programController.js";
 import express from "express";
 const router = express.Router();
 
 // -- COACH'S ENDPOINTS --
 
 // Get List of All Athletes
+router.get("/", getRosterList)
 
 // Get a Single Program from a specific Athlete - (Which will then show a preview of all blocks)
 
