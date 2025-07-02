@@ -2,6 +2,7 @@ import {
   getRosterList,
   postProgram,
   getCurrentProgram,
+  getCurrentProgramForAthlete,
 } from "../controllers/programController.js";
 import express from "express";
 const router = express.Router();
@@ -25,5 +26,7 @@ router.post("/", postProgram);
 // -- ATHLETE'S ENDPOINTS --
 
 // Get Current Program
+
+router.get("/athlete", getCurrentProgramForAthlete);
 
 export default router;
