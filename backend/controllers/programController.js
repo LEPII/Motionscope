@@ -1,6 +1,12 @@
 import { Program, validateProgram } from "../model/program.js";
 import { User } from "../model/user.js";
 
+const sortTrainingItems = (items) => {
+  return items.sort(
+    (a, b) => new Date(b.startDate || b.date) - new Date(a.startDate || a.date)
+  );
+};
+
 const getRosterList = async (req, res) => {
   const coachId = req.user._id;
 
@@ -28,8 +34,8 @@ const getCurrentProgram = async (req, res) => {
   const { athleteId } = req.params;
 
   const program = await Program.findOne({ coachId, athleteId })
-    .populate("blocks")
-    .populate("compDays");
+    .populate("blocks", "blockName blockStartDate")
+    .populate("compDays", "name date");
 
   if (!program) {
     return res.status(200).json({
@@ -40,7 +46,20 @@ const getCurrentProgram = async (req, res) => {
     });
   }
 
-  
+  let allTrainingItems = [...program.blocks, ...program.compDays];
+  allTrainingItems = sortTrainingItems(allTrainingItems);
+
+  const currentTrainingItem =
+    allTrainingItems.length > 0 ? allTrainingItems[0] : null;
+
+  res.status(200).json({
+    message: "Program retrieved successfully",
+    programId: program._id,
+    blocks: program.blocks,
+    compDays: program.compDays,
+    allTrainingItems: allTrainingItems,
+    currentTrainingItem: currentTrainingItem,
+  });
 };
 
 const postProgram = async (req, res) => {
@@ -99,4 +118,42 @@ const postProgram = async (req, res) => {
     .json({ message: "Program created successfully", program: savedProgram });
 };
 
-export { postProgram, getRosterList, getCurrentProgram };
+const getCurrentProgramForAthlete = async (req, res) => {
+  const athleteId = req.user._id;
+
+  const program = await Program.findOne({ athleteId })
+    .populate("blocks", "blockName blockStartDate")
+    .populate("compDays", "name date");
+
+  if (!program) {
+    return res.status(200).json({
+      message:
+        "No program assigned to you yet. Please wait for your coach to create one.",
+      program: null,
+      currentTrainingItem: null,
+      allTrainingItems: [],
+    });
+  }
+
+  let allTrainingItems = [...program.blocks, ...program.compDays];
+  allTrainingItems = sortTrainingItems(allTrainingItems);
+
+  const currentTrainingItem =
+    allTrainingItems.length > 0 ? allTrainingItems[0] : null;
+
+  res.status(200).json({
+    message: "Program retrieved successfully",
+    programId: program._id,
+    blocks: program.blocks,
+    compDays: program.compDays,
+    allTrainingItems: allTrainingItems,
+    currentTrainingItem: currentTrainingItem,
+  });
+};
+
+export {
+  postProgram,
+  getRosterList,
+  getCurrentProgram,
+  getCurrentProgramForAthlete,
+};
