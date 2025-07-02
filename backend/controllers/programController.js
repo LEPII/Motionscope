@@ -23,6 +23,26 @@ const getRosterList = async (req, res) => {
   res.status(200).json(roster);
 };
 
+const getCurrentProgram = async (req, res) => {
+  const coachId = req.user._id;
+  const { athleteId } = req.params;
+
+  const program = await Program.findOne({ coachId, athleteId })
+    .populate("blocks")
+    .populate("compDays");
+
+  if (!program) {
+    return res.status(200).json({
+      message: "No program found for this athlete. Incentivize creation!",
+      program: null,
+      blocks: [],
+      compDays: [],
+    });
+  }
+
+  
+};
+
 const postProgram = async (req, res) => {
   const { error, value: programData } = validateProgram.validate(req.body);
   if (error) {
@@ -79,4 +99,4 @@ const postProgram = async (req, res) => {
     .json({ message: "Program created successfully", program: savedProgram });
 };
 
-export { postProgram, getRosterList };
+export { postProgram, getRosterList, getCurrentProgram };
