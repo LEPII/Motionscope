@@ -1,5 +1,7 @@
 import { Program, validateProgram } from "../model/program.js";
 import { User } from "../model/user.js";
+import { Block } from "../model/block.js";
+import { CompDay } from "../model/compDay.js";
 
 const sortTrainingItems = (items) => {
   return items.sort(
@@ -118,6 +120,24 @@ const postProgram = async (req, res) => {
     .json({ message: "Program created successfully", program: savedProgram });
 };
 
+const deleteProgram = async (req, res) => {
+  const coachId = req.user._id;
+  const { id } = req.params;
+
+  const program = await Program.findOne({ _id: id, coachId });
+
+  await Promise.all([
+    Block.deleteMany({ _id: { $in: program.blocks } }),
+    CompDay.deleteMany({ _id: { $in: program.compDays } }),
+  ]);
+
+  await program.deleteOne();
+
+  res.status(200).json({
+    message: "Program and associated training data deleted successfully.",
+  });
+};
+
 const getCurrentProgramForAthlete = async (req, res) => {
   const athleteId = req.user._id;
 
@@ -155,5 +175,6 @@ export {
   postProgram,
   getRosterList,
   getCurrentProgram,
+  deleteProgram,
   getCurrentProgramForAthlete,
 };

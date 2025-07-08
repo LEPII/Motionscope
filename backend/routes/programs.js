@@ -2,6 +2,7 @@ import {
   getRosterList,
   postProgram,
   getCurrentProgram,
+  postProgram,
   getCurrentProgramForAthlete,
 } from "../controllers/programController.js";
 import express from "express";
@@ -22,6 +23,7 @@ router.post("/", postProgram);
 // Update a Program
 
 // Delete a Program / Athlete - Archive Option?
+router.post("/:id", deleteProgram);
 
 // -- ATHLETE'S ENDPOINTS --
 
