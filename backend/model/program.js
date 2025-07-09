@@ -1,20 +1,29 @@
 import Joi from "joi";
 import mongoose from "mongoose";
 
-const programSchema = new mongoose.Schema({
-  coachId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
+const programSchema = new mongoose.Schema(
+  {
+    coachId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    athleteId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    blocks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Block" }],
+    compDays: [{ type: mongoose.Schema.Types.ObjectId, ref: "CompDay" }],
+    isArchived: {
+      type: Boolean,
+      default: false,
+    },
   },
-  athleteId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  blocks: [{ type: mongoose.Schema.Types.ObjectId, ref: "Block" }],
-  compDays: [{ type: mongoose.Schema.Types.ObjectId, ref: "CompDay" }],
-});
+  {
+    timestamps: true, 
+  }
+);
 
 const Program = mongoose.model("Program", programSchema);
 
@@ -35,15 +44,18 @@ const validateProgram = Joi.object({
     }),
   blocks: Joi.array()
     .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
+    .optional()
     .messages({
       "string.pattern.base": "Each block in the array must be a valid ObjectId",
     }),
   compDays: Joi.array()
     .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
+    .optional()
     .messages({
       "string.pattern.base":
         "Each compDay in the array must be a valid ObjectId",
     }),
+  isArchived: Joi.boolean().optional(),
 });
 
 export { Program, validateProgram };

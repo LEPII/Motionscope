@@ -35,7 +35,11 @@ const getCurrentProgram = async (req, res) => {
   const coachId = req.user._id;
   const { athleteId } = req.params;
 
-  const program = await Program.findOne({ coachId, athleteId })
+  const program = await Program.findOne({
+    coachId,
+    athleteId,
+    isArchived: false,
+  })
     .populate("blocks", "blockName blockStartDate")
     .populate("compDays", "name date");
 
@@ -138,10 +142,42 @@ const deleteProgram = async (req, res) => {
   });
 };
 
+const toggleProgramArchive = async (req, res) => {
+  const coachId = req.user._id;
+  const { id } = req.params;
+  const { archive } = req.body;
+
+  if (typeof archive !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: 'Invalid request: "archive" must be a boolean.' });
+  }
+
+  const program = await Program.findOneAndUpdate(
+    {
+      _id: id,
+      coachId,
+    },
+    { $set: { isArchived: archive } },
+    {
+      new: true,
+    }
+  );
+
+  if (!program) {
+    return res.status(400).json({ message: "Program not found" });
+  }
+
+  const statusMessage = archive ? "archived" : "unarchived";
+  res
+    .status(200)
+    .json({ message: `Program ${statusMessage} successfully`, program });
+};
+
 const getCurrentProgramForAthlete = async (req, res) => {
   const athleteId = req.user._id;
 
-  const program = await Program.findOne({ athleteId })
+  const program = await Program.findOne({ athleteId, isArchived: false })
     .populate("blocks", "blockName blockStartDate")
     .populate("compDays", "name date");
 
@@ -176,5 +212,6 @@ export {
   getRosterList,
   getCurrentProgram,
   deleteProgram,
+  toggleProgramArchive,
   getCurrentProgramForAthlete,
 };
