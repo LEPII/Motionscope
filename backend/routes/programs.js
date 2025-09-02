@@ -1,6 +1,5 @@
 import {
   getRosterList,
-  postProgram,
   getCurrentProgram,
   postProgram,
   deleteProgram,

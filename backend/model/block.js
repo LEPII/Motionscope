@@ -1,6 +1,30 @@
 import Joi from "joi";
 import mongoose from "mongoose";
-import JoiObjectId from "joi-objectid";
+
+const primExercisesEnum = [
+  "Primary Squat",
+  "Primary Bench",
+  "Primary Deadlift",
+  "Secondary Squat",
+  "Secondary Bench",
+  "Secondary Deadlift",
+  "Tertiary Squat",
+  "Tertiary Bench",
+  "Tertiary Deadlift",
+  "Volume Squat",
+  "Volume Bench",
+  "Volume Deadlift",
+];
+
+const dayEnum = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 const blockSchema = new mongoose.Schema({
   coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -74,15 +98,7 @@ const blockSchema = new mongoose.Schema({
   },
   days: {
     type: [String],
-    enum: [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ],
+    enum: dayEnum,
     validate: {
       validator: function (v) {
         return v.length > 0;
@@ -91,28 +107,16 @@ const blockSchema = new mongoose.Schema({
     },
     required: true,
   },
-  weeklySchedule: [
+  blockSchedule: [
     {
-      weekStartDate: {
-        type: Date,
-        required: true,
-      },
+      weekNumber: { type: Number, required: true },
+      weekStartDate: { type: Date, required: true },
       dailySchedule: [
         {
           primExercises: {
             type: [String],
+            enum: primExercisesEnum,
             required: true,
-            enum: [
-              "Primary Squat",
-              "Secondary Squat",
-              "Volume Squat",
-              "Primary Bench",
-              "Secondary Bench",
-              "Volume Bench",
-              "Primary Deadlift",
-              "Secondary Deadlift",
-              "Volume Deadlift",
-            ],
             validate: {
               validator: function (v) {
                 return v.length > 0;
@@ -120,11 +124,8 @@ const blockSchema = new mongoose.Schema({
               message: "Please select at least one title for the day.",
             },
           },
-          customExercisesId: [
-            { type: mongoose.Schema.Types.ObjectId, ref: "CustomExercise" },
-          ],
-          presetExercisesId: [
-            { type: mongoose.Schema.Types.ObjectId, ref: "PresetExercise" },
+          exercises: [
+            { type: mongoose.Schema.Types.ObjectId, ref: "Exercise" },
           ],
         },
       ],
@@ -132,69 +133,63 @@ const blockSchema = new mongoose.Schema({
   ],
 });
 
+blockSchema.pre("validate", function (next) {
+  if (this.blockSchedule && this.blockSchedule.length > 0 && this.days) {
+    for (const week of this.blockSchedule) {
+      if (
+        week.dailySchedule &&
+        week.dailySchedule.length !== this.days.length
+      ) {
+        this.invalidate(
+          "blockSchedule",
+          `Each 'dailySchedule' must have ${this.days.length} items, matching the number of selected 'days'.`,
+          week
+        );
+        return next();
+      }
+    }
+  }
+  next();
+});
+
 const Block = mongoose.model("Block", blockSchema);
 
-// const validateBlock = Joi.object({
-//   coach: Joi.objectId().required(),
-//   coach: Joi.objectId().required(),
-//   blockName: Joi.string().min(1).max(50).required(),
-//   numberOfWeeks: Joi.number().min(1).max(12).required(),
-//   blockStartDate: Joi.date()
-//     .default(() => new Date())
-//     .required()
-//     .greater("now")
-//     .message("Start date must be today or in the future."),
-//   days: Joi.array().items(
-//     Joi.string().valid(
-//       "Sunday",
-//       "Monday",
-//       "Tuesday",
-//       "Wednesday",
-//       "Thursday",
-//       "Friday",
-//       "Saturday"
-//     )
-//   ),
-//   weeklySchedule: Joi.array()
-//     .items(
-//       Joi.object({
-//         weekStartDate: Joi.date().required,
-//         dailySchedule: Joi.array()
-//           .items(
-//             Joi.object({
-//               primExercises: Joi.array()
-//                 .items(
-//                   Joi.string().valid(
-//                     "Primary Squat",
-//                     "Secondary Squat",
-//                     "Volume Squat",
-//                     "Primary Bench",
-//                     "Secondary Bench",
-//                     "Volume Bench",
-//                     "Primary Deadlift",
-//                     "Secondary Deadlift",
-//                     "Volume Deadlift"
-//                   )
-//                 )
-//                 .optional(),
-//               customExercisesId: Joi.array().items(ObjectId).optional(),
-//               presetExercisesId: Joi.array().items(ObjectId).optional(),
-//               customExercisesId: Joi.when("presetExercisesId", {
-//                 is: Joi.array().length(0),
-//                 then: Joi.array().items(ObjectId).min(1),
-//               }).optional(),
-//               presetExercisesId: Joi.when("customExercisesId", {
-//                 is: Joi.array().length(0),
-//                 then: Joi.array().items(ObjectId).min(1),
-//               }).optional(),
-//             })
-//           )
-//           .min(1)
-//           .required(),
-//       })
-//     )
-//     .min(1)
-//     .required(),
-// });
+const dailyScheduleSchema = Joi.object({
+  primExercises: Joi.array()
+    .items(Joi.string().valid(...primExercisesEnum))
+    .min(1)
+    .required()
+    .messages({
+      "array.min": "Please select at least one title for the day.",
+      "any.required": "Primary exercises are required.",
+    }),
+  exercises: Joi.array().items(Joi.string().hex().length(24)).default([]),
+});
 
-export { Block };
+const blockScheduleWeekSchema = Joi.object({
+  weekNumber: Joi.number().integer().min(1).required(),
+  weekStartDate: Joi.date().iso().required(),
+  dailySchedule: Joi.array().items(dailyScheduleSchema).required(),
+});
+
+const blockValidationSchema = Joi.object({
+  coach: Joi.string().hex().length(24).required(),
+  athlete: Joi.string().hex().length(24).required(),
+  blockName: Joi.string().min(1).max(50).required(),
+  numberOfWeeks: Joi.number().integer().min(1).max(12).required(),
+  blockStartDate: Joi.date().iso().required(),
+  blockEndDate: Joi.date().iso().required(),
+  days: Joi.array()
+    .items(Joi.string().valid(...dayEnum))
+    .min(1)
+    .required(),
+  blockSchedule: Joi.array()
+    .items(blockScheduleWeekSchema)
+    .min(1)
+    .required()
+    .messages({
+      "array.min": "Block schedule must have at least one week.",
+    }),
+});
+
+export { Block, blockValidationSchema };

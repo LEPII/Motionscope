@@ -2,6 +2,7 @@ import { logger } from "../utils/logger.js";
 import mongoose from "mongoose";
 
 export default function dbInitializer() {
+  console.log("dbInitializer running...");
   mongoose
     .connect(process.env.MONGODB_URI)
     .then(() => {
