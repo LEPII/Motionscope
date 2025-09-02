@@ -1,6 +1,30 @@
 import Joi from "joi";
 import mongoose from "mongoose";
-import JoiObjectId from "joi-objectid";
+
+const primExercisesEnum = [
+  "Primary Squat",
+  "Primary Bench",
+  "Primary Deadlift",
+  "Secondary Squat",
+  "Secondary Bench",
+  "Secondary Deadlift",
+  "Tertiary Squat",
+  "Tertiary Bench",
+  "Tertiary Deadlift",
+  "Volume Squat",
+  "Volume Bench",
+  "Volume Deadlift",
+];
+
+const dayEnum = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
 
 const blockSchema = new mongoose.Schema({
   coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
@@ -74,15 +98,7 @@ const blockSchema = new mongoose.Schema({
   },
   days: {
     type: [String],
-    enum: [
-      "Sunday",
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-    ],
+    enum: dayEnum,
     validate: {
       validator: function (v) {
         return v.length > 0;
@@ -91,123 +107,52 @@ const blockSchema = new mongoose.Schema({
     },
     required: true,
   },
-  blockSchedule: {
-    type: [
-      {
-        weekNumber: { type: Number, required: true },
-        weekStartDate: {
-          type: Date,
-          required: true,
-        },
-        weeklySchedule: [
-          {
-            dailySchedule: [
-              {
-                primExercises: {
-                  type: [String],
-                  required: true,
-                  enum: [
-                    "Primary Squat",
-                    "Primary Bench",
-                    "Primary Deadlift",
-                    "Secondary Squat",
-                    "Secondary Bench",
-                    "Secondary Deadlift",
-                    "Tertiary Squat",
-                    "Tertiary Bench",
-                    "Tertiary Deadlift",
-                    "Volume Squat",
-                    "Volume Bench",
-                    "Volume Deadlift",
-                  ],
-                  validate: {
-                    validator: function (v) {
-                      return v.length > 0;
-                    },
-                    message: "Please select at least one title for the day.",
-                  },
-                },
-                customExercisesId: [
-                  {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "CustomExercise",
-                  },
-                ],
-                presetExercisesId: [
-                  {
-                    type: mongoose.Schema.Types.ObjectId,
-                    ref: "PresetExercise",
-                  },
-                ],
+  blockSchedule: [
+    {
+      weekNumber: { type: Number, required: true },
+      weekStartDate: { type: Date, required: true },
+      dailySchedule: [
+        {
+          primExercises: {
+            type: [String],
+            enum: primExercisesEnum,
+            required: true,
+            validate: {
+              validator: function (v) {
+                return v.length > 0;
               },
-            ],
+              message: "Please select at least one title for the day.",
+            },
           },
-        ],
-      },
-    ],
-    validate: {
-      validator: function (blockSchedule) {
-        if (!this.numberOfWeeks) {
-          return true; // Let other validations handle missing numberOfWeeks
-        }
-        return blockSchedule.length === this.numberOfWeeks;
-      },
-      message:
-        "The number of weekly schedules in 'blockSchedule' must match 'numberOfWeeks'.",
+          exercises: [
+            { type: mongoose.Schema.Types.ObjectId, ref: "Exercise" },
+          ],
+        },
+      ],
     },
-  },
+  ],
 });
 
 blockSchema.pre("validate", function (next) {
   if (this.blockSchedule && this.blockSchedule.length > 0 && this.days) {
     for (const week of this.blockSchedule) {
-      if (week.weeklySchedule && week.weeklySchedule.length > 0) {
-        for (const weeklyItem of week.weeklySchedule) {
-          if (
-            weeklyItem.dailySchedule &&
-            weeklyItem.dailySchedule.length !== this.days.length
-          ) {
-            this.invalidate(
-              "blockSchedule",
-              `Each 'weeklySchedule' must have ${this.days.length} 'dailySchedule' items, matching the number of selected 'days'.`,
-              weeklyItem
-            );
-            return next();
-          }
-        }
+      if (
+        week.dailySchedule &&
+        week.dailySchedule.length !== this.days.length
+      ) {
+        this.invalidate(
+          "blockSchedule",
+          `Each 'dailySchedule' must have ${this.days.length} items, matching the number of selected 'days'.`,
+          week
+        );
+        return next();
       }
     }
   }
-
   next();
 });
 
 const Block = mongoose.model("Block", blockSchema);
-
-const primExercisesEnum = [
-  "Primary Squat",
-  "Primary Bench",
-  "Primary Deadlift",
-  "Secondary Squat",
-  "Secondary Bench",
-  "Secondary Deadlift",
-  "Tertiary Squat",
-  "Tertiary Bench",
-  "Tertiary Deadlift",
-  "Volume Squat",
-  "Volume Bench",
-  "Volume Deadlift",
-];
-
-const dayEnum = [
-  "Sunday",
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-];
 
 const dailyScheduleSchema = Joi.object({
   primExercises: Joi.array()
@@ -217,35 +162,34 @@ const dailyScheduleSchema = Joi.object({
     .messages({
       "array.min": "Please select at least one title for the day.",
       "any.required": "Primary exercises are required.",
-      "string.valid":
-        "{{#label}} must be one of the allowed primary exercises.",
     }),
-  customExercisesId: Joi.array()
-    .items(Joi.string().hex().length(24))
-    .default([]),
-  presetExercisesId: Joi.array()
-    .items(Joi.string().hex().length(24))
-    .default([]),
-});
-
-const weeklyScheduleItemSchema = Joi.object({
-  dailySchedule: Joi.array().items(dailyScheduleSchema).required().messages({
-    "array.base": "Daily schedule must be an array.",
-    "any.required": "Daily schedule is required.",
-  }),
+  exercises: Joi.array().items(Joi.string().hex().length(24)).default([]),
 });
 
 const blockScheduleWeekSchema = Joi.object({
   weekNumber: Joi.number().integer().min(1).required(),
-  weekStartDate: Joi.date().iso().required(), 
-  weeklySchedule: Joi.array()
-    .items(weeklyScheduleItemSchema)
-    .length(1)
-    .required() 
+  weekStartDate: Joi.date().iso().required(),
+  dailySchedule: Joi.array().items(dailyScheduleSchema).required(),
+});
+
+const blockValidationSchema = Joi.object({
+  coach: Joi.string().hex().length(24).required(),
+  athlete: Joi.string().hex().length(24).required(),
+  blockName: Joi.string().min(1).max(50).required(),
+  numberOfWeeks: Joi.number().integer().min(1).max(12).required(),
+  blockStartDate: Joi.date().iso().required(),
+  blockEndDate: Joi.date().iso().required(),
+  days: Joi.array()
+    .items(Joi.string().valid(...dayEnum))
+    .min(1)
+    .required(),
+  blockSchedule: Joi.array()
+    .items(blockScheduleWeekSchema)
+    .min(1)
+    .required()
     .messages({
-      "array.length": "Each week must contain exactly one weekly schedule.",
-      "any.required": "Weekly schedule is required for each week.",
+      "array.min": "Block schedule must have at least one week.",
     }),
 });
 
-export { Block };
+export { Block, blockValidationSchema };
