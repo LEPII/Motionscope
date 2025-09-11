@@ -1,5 +1,9 @@
-import { Block } from "../model/block.js";
-// import { Exercise } from "../model/exercise.js";
+import {
+  Block,
+  blockCoachSchema,
+  exerciseEntryAthleteSchema,
+} from "../model/block.js";
+import mongoose from "mongoose";
 
 /// -- COACH'S ENDPOINTS --
 
@@ -13,108 +17,31 @@ const getAllBlocks = async (req, res) => {
   res.send(allBlocks);
 };
 
-// const postBlock = async (req, res) => {
-//   // const { error, value } = validateBlock.validate(req.body);
+const postBlock = async (req, res) => {
+  const { athleteId } = req.params.athleteId;
+  const coachId = req.user._id;
 
-//   if (error) {
-//     return res.status(400).json({ error: error.details[0].message });
-//   }
+  const { error, value } = blockCoachSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false,
+  });
 
-//   const {
-//     coach,
-//     athlete,
-//     blockName,
-//     numberOfWeeks,
-//     blockStartDate,
-//     days,
-//     weeklySchedule,
-//   } = value;
+  if (error) {
+    return res.status(400).json({
+      message: "Validation failed",
+      details: error.details.map((d) => d.message),
+    });
+  }
 
-//   // Batch Fetching All Custom Exercises
-//   const customExercises = await CustomExercise.find();
-//   const customExerciseMap = new Map(
-//     customExercises.map((exercise) => [exercise._id.toString(), exercise])
-//   );
+  const blockData = { ...value, coach: coachId, athlete: athleteId };
 
-//   // Batch Fetching All Preset Exercises
-//   const presetExercises = await PresetExercise.find();
-//   const presetExerciseMap = new Map(
-//     customExercises.map((exercise) => [exercise._id.toString(), exercise])
-//   );
+  const savedBlock = await Block.create(blockData);
 
-//   const newExercise = weeklySchedule.map((week) => {
-//     week.dailySchedule.map((dailySchedule) => {
-//       dailySchedule.customExercises.map((exercise) => {
-//         if (exercise.presetId) {
-//           const presetExercise = presetExerciseMap.get(
-//             exercise.presetId.toString()
-//           );
-//           if (!presetExercise) {
-//             throw new Error(
-//               `Preset exercise with ID ${exercise.presetId} not founds`
-//             );
-//           }
-//           return new CustomExercise({
-//             name: presetExercise.name,
-//             description: presetExercise.description,
-//             sets: exercise.sets,
-//             repsMin: exercise.repsMin || 0,
-//             reps: exercise.reps,
-//             prescribedLoadMin: exercise.prescribedLoadMin || 0,
-//             prescribedLoad: exercise.prescribedLoad,
-//             prescribedRPEMin: exercise.prescribedRPEMin || 0,
-//             prescribedRPE: exercise.prescribedRPE,
-//             cuesFromCoach: exercise.cuesFromCoach || "",
-//             sideNote: exercise.sideNote || "",
-//           });
-//         } else if (exercise.CustomExerciseId) {
-//           const customExercise = customExerciseMap.get(
-//             exercise.customExerciseId.toString()
-//           );
-//           if (!customExercise) {
-//             throw new Error(
-//               `Custom exercise with ID ${exercise.customExerciseId} not found`
-//             );
-//           }
-//           return new CustomExercise({
-//             name: customExercise.name,
-//             description: customExercise.description,
-//             sets: exercise.sets,
-//             repsMin: exercise.repsMin || 0,
-//             reps: exercise.reps,
-//             prescribedLoadMin: exercise.prescribedLoadMin || 0,
-//             prescribedLoad: exercise.prescribedLoad,
-//             prescribedRPEMin: exercise.prescribedRPEMin || 0,
-//             prescribedRPE: exercise.prescribedRPE,
-//             cuesFromCoach: exercise.cuesFromCoach || "",
-//             sideNote: exercise.sideNote || "",
-//           });
-//         } else {
-//           throw new Error("Invalid exercise type provided");
-//         }
-//       });
-//     });
-//   });
-
-//   const newBlock = new Block({
-//     blockName,
-//     numberOfWeeks,
-//     blockStartDate,
-//     days,
-//     weeklySchedule: weeklySchedule.map((week) => ({
-//       weekStartDate: week.weekStartDate,
-//       dailySchedule: week.dailySchedule.map((dailySchedule) => ({
-//         primaryExercise: dailySchedule.primaryExercise,
-//         customExercises: newExercise,
-//       })),
-//     })),
-//   });
-
-//   const savedBlock = await newBlock.save();
-//   res
-//     .status(201)
-//     .json({ message: "Block Successfully Created", data: savedBlock });
-// };
+  res.status(201).json({
+    message: "Block created successfully",
+    block: savedBlock,
+  });
+};
 
 const immutableFieldsForCoaches = [
   "actualLoad",
@@ -124,90 +51,75 @@ const immutableFieldsForCoaches = [
 ];
 
 const updateBlock = async (req, res) => {
-  try {
-    const { blockId } = req.params;
-    const {
-      blockName,
-      numberOfWeeks,
-      blockStartDate,
-      days,
-      customExerciseUpdates,
-    } = req.body;
+  const { blockId } = req.params;
+  const coachId = req.user._id;
 
-    const block = await Block.findById(blockId);
-
-    if (!block) {
-      return res.status(404).json({ message: "Block not found" });
-    }
-
-    if (blockName) block.blockName = blockName;
-    if (numberOfWeeks) block.numberOfWeeks = numberOfWeeks;
-    if (blockStartDate) block.blockStartDate = blockStartDate;
-    if (days) block.days = days;
-
-    if (customExerciseUpdates) {
-      customExerciseUpdates.forEach((update) => {
-        const { weekIndex, dayIndex, exerciseIndex, field, newValue } = update;
-
-        if (!immutableFieldsForCoaches.includes(field)) {
-          block.weeklySchedule[weekIndex].dailySchedule[
-            dayIndex
-          ].customExercises[exerciseIndex][field] = newValue;
-        } else {
-          return res.status(400).json({
-            message: `Cannot edit field: ${field}. Only actualLoad, actualRPEMin, actualRPE, sideNote are editable.`,
-          });
-        }
-      });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
+  if (!mongoose.Types.ObjectId.isValid(blockId)) {
+    return res.status(400).json({ message: "Invalid block ID." });
   }
-};
 
-//
-const deleteBlock = async (req, res) => {};
-//
+  const { error, value } = blockCoachSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false,
+    presence: "optional",
+  });
 
-const postTemplateBlock = async (req, res) => {
-  try {
-    const { name, numberOfWeeks, blockStartDate, days, customExercises } =
-      req.body;
-
-    const newBlock = new Block({
-      name,
-      numberOfWeeks,
-      blockStartDate,
-      days,
+  if (error) {
+    return res.status(400).json({
+      message: "Validation failed",
+      details: error.details.map((d) => d.message),
     });
-
-    if (customExercises) {
-      newBlock.weeklySchedule = customExercises.map((week) => ({
-        weekStartDate: week.weekStartDate,
-        dailySchedule: week.dailySchedule.map((day) => ({
-          dayOfWeek: day.dayOfWeek,
-          customExercises: day.customExercises.map((exercise) => {
-            const allowedExercise = {};
-            for (const key in exercise) {
-              if (!immutableFieldsForCoaches.includes(key)) {
-                allowedExercise[key] = exercise[key];
-              }
-            }
-            return allowedExercise;
-          }),
-        })),
-      }));
-    }
-
-    await newBlock.save();
-
-    res.status(201).json(newBlock);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: "Server Error" });
   }
+
+  const block = await Block.findOne({ _id: blockId, coach: coachId });
+  if (!block) {
+    return res
+      .status(404)
+      .json({ message: "Block not found or access denied." });
+  }
+
+  Object.keys(value).forEach((key) => {
+    block[key] = value[key];
+  });
+
+  const updatedBlock = await block.save();
+
+  res.status(200).json({
+    message: "Block updated successfully",
+    block: updatedBlock,
+  });
 };
+
+//
+const deleteBlock = async (req, res) => {
+  const { athleteId, blockId } = req.params;
+
+  if (
+    !mongoose.Types.ObjectId.isValid(athleteId) ||
+    !mongoose.Types.ObjectId.isValid(blockId)
+  ) {
+    return res.status(400).json({ message: "Invalid athlete or block ID." });
+  }
+
+  const deletedBlock = await Block.findOneAndDelete({
+    _id: blockId,
+    athlete: athleteId,
+    coach: req.user._id,
+  });
+
+  if (!deletedBlock) {
+    return res
+      .status(404)
+      .json({ message: "Block not found or access denied." });
+  }
+
+  res.status(200).json({
+    message: "Block deleted successfully",
+    block: deletedBlock,
+  });
+};
+
+const postTemplateBlock = async (req, res) => {};
 
 /// -- ATHLETE'S ENDPOINTS --
 
@@ -221,47 +133,69 @@ const getAllAthleteBlocks = async (req, res) => {
 };
 
 const updateAthleteBlock = async (req, res) => {
-  try {
-    const { blockId } = req.params;
-    const exerciseUpdates = req.body;
+  const { blockId, exerciseId } = req.params;
+  const athleteId = req.user._id;
 
-    const block = await Block.findById(blockId);
-
-    if (!block) {
-      return res.status(400).json({ error: "Block not found" });
-    }
-
-    exerciseUpdates.forEach((update) => {
-      const { weekIndex, dayIndex, exerciseIndex, field, newValue } = update;
-
-      if (
-        ["actualLoad", "actualRPEMin", "actualRPE", "sideNote"].includes(field)
-      ) {
-        block.weeklySchedule[weekIndex].dailySchedule[dayIndex].customExercises[
-          exerciseIndex
-        ][field] = newValue;
-      } else {
-        return res.status(400).json({
-          message: `Cannot edit field: ${field}. Only actualLoad, actualRPEMin, actualRPE, sideNote are editable.`,
-        });
-      }
-    });
-
-    await block.save();
-
-    res
-      .status(200)
-      .json({ message: "Exercise updated successfully", currentExercise });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to update exercise" });
+  if (
+    !mongoose.Types.ObjectId.isValid(blockId) ||
+    !mongoose.Types.ObjectId.isValid(exerciseId)
+  ) {
+    return res.status(400).json({ message: "Invalid block or exercise ID." });
   }
+
+  const { error, value } = exerciseEntryAthleteSchema.validate(req.body, {
+    abortEarly: false,
+    allowUnknown: false,
+    presence: "optional",
+  });
+
+  if (error) {
+    return res.status(400).json({
+      message: "Validation failed",
+      details: error.details.map((d) => d.message),
+    });
+  }
+
+  const block = await Block.findOne({ _id: blockId, athlete: athleteId });
+  if (!block) {
+    return res
+      .status(404)
+      .json({ message: "Block not found or access denied." });
+  }
+
+  let exerciseFound = false;
+  for (const week of block.blockSchedule || []) {
+    for (const day of week.dailySchedule || []) {
+      for (const ex of day.exercises || []) {
+        if (ex._id.toString() === exerciseId) {
+          Object.assign(ex, value);
+          exerciseFound = true;
+          break;
+        }
+      }
+      if (exerciseFound) break;
+    }
+    if (exerciseFound) break;
+  }
+
+  if (!exerciseFound) {
+    return res
+      .status(404)
+      .json({ message: "Exercise not found in this block." });
+  }
+
+  const updatedBlock = await block.save();
+
+  res.status(200).json({
+    message: "Exercise updated successfully",
+    block: updatedBlock,
+  });
 };
 
 export {
   getSingleBlock,
   getAllBlocks,
-  // postBlock,
+  postBlock,
   updateBlock,
   deleteBlock,
   postTemplateBlock,
