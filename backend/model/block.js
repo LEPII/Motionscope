@@ -252,4 +252,10 @@ const weeklyScheduleAthleteSchema = Joi.object({
   dailySchedule: Joi.array().items(dailyScheduleAthleteSchema).optional(),
 });
 
-export { Block, blockCoachSchema, exerciseEntryAthleteSchema };
+export {
+  Block,
+  blockCoachSchema,
+  exerciseEntryAthleteSchema,
+  weeklyScheduleSchema,
+  dayEnum,
+};
