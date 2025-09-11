@@ -1,5 +1,6 @@
 import { CompDay, validateCompDay } from "../model/compDay.js";
 import { Program } from "../model/program.js";
+import mongoose from "mongoose";
 
 // -- COACH'S ENDPOINTS --
 

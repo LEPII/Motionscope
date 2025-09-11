@@ -34,21 +34,38 @@ const postBlock = async (req, res) => {
   }
 
   const blockData = { ...value, coach: coachId, athlete: athleteId };
+  const { programId } = req.body;
 
-  const savedBlock = await Block.create(blockData);
+  try {
+    session.startTransaction();
+    const program = await Program.findById(programId).session(session);
+    if (!program) {
+      await session.abortTransaction();
+      return res.status(404).json({ message: "Program not found" });
+    }
 
-  res.status(201).json({
-    message: "Block created successfully",
-    block: savedBlock,
-  });
+    const [savedBlock] = await Block.create([blockData], { session });
+
+    program.blocks.push(savedBlock._id);
+    await program.save({ session });
+
+    await session.commitTransaction();
+
+    return res.status(201).json({
+      message: "Block created and added to Program",
+      block: savedBlock,
+    });
+  } catch (err) {
+    await session.abortTransaction();
+    console.error("Transaction failed:", err);
+    return res.status(500).json({
+      message: "Something went wrong",
+      error: err.message,
+    });
+  } finally {
+    await session.endSession();
+  }
 };
-
-const immutableFieldsForCoaches = [
-  "actualLoad",
-  "actualRPEMin",
-  "actualRPE",
-  "sideNote",
-];
 
 const updateBlock = async (req, res) => {
   const { blockId } = req.params;
