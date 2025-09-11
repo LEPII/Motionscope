@@ -56,13 +56,12 @@ const postCompDay = async (req, res) => {
 
   const { programId } = req.body;
   const session = await mongoose.startSession();
-  session.startTransaction();
 
   try {
+    session.startTransaction();
     const program = await Program.findById(programId).session(session);
     if (!program) {
       await session.abortTransaction();
-      session.endSession();
       return res.status(404).json({ message: "Program not found" });
     }
 
@@ -72,13 +71,18 @@ const postCompDay = async (req, res) => {
     program.compDays.push(savedCompDay._id);
     await program.save({ session });
 
+    await session.commitTransaction();
+
     res.status(201).json({
       message: "CompDay created and added to Program",
       compDay: savedCompDay,
     });
   } catch (error) {
     await session.abortTransaction();
-    throw error;
+    console.error("Transaction failed:", err);
+    return res
+      .status(500)
+      .json({ message: "Something went wrong", error: err.message });
   } finally {
     session.endSession;
   }
