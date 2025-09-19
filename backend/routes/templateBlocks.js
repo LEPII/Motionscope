@@ -1,5 +1,12 @@
+import {
+  createTemplate,
+  getTemplates,
+  getTemplateById,
+  deleteTemplate,
+  createBlockFromTemplate,
+} from "../controllers/templateBlockController";
 import express from "express";
-const router = express.Router(); 
+const router = express.Router();
 
 // -- COACH'S ENDPOINTS --
 
