@@ -52,6 +52,7 @@ const exerciseEntrySchema = new mongoose.Schema({
   actualRPEMin: { type: Number, min: 0, max: 10 },
   actualRPE: { type: Number, min: 0, max: 10 },
   sideNote: { type: String, minLength: 1, maxLength: 1000 },
+  cuesNote: { type: String, minLength: 1, maxLength: 2000 },
 });
 
 const dailyScheduleSchema = new mongoose.Schema({
@@ -264,7 +265,8 @@ const exerciseEntryAthleteSchema = Joi.object({
   actualLoad: Joi.number().min(0).optional(),
   actualRPEMin: Joi.number().min(0).max(10).optional(),
   actualRPE: Joi.number().min(1).max(10).optional(),
-  sideNote: Joi.string().max(300).optional(),
+  sideNote: Joi.string().max(1000).optional(),
+  cuesNote: Joi.string().max(2000).optional(),
 });
 
 const dailyScheduleAthleteSchema = Joi.object({
