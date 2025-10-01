@@ -266,7 +266,7 @@ const exerciseEntryAthleteSchema = Joi.object({
   actualRPEMin: Joi.number().min(0).max(10).optional(),
   actualRPE: Joi.number().min(1).max(10).optional(),
   sideNote: Joi.string().max(1000).optional(),
-  cuesNote: Joi.string().max(1000).optional(),
+  cuesNote: Joi.string().max(2000).optional(),
 });
 
 const dailyScheduleAthleteSchema = Joi.object({
