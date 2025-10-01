@@ -187,6 +187,29 @@ blockSchema.pre("validate", function (next) {
   next();
 });
 
+blockSchema.pre("save", async function (next) {
+  const Block = mongoose.model("Block");
+
+  const overlappingBlock = await Block.findOne({
+    athlete: this.athlete,
+    _id: { $ne: this._id }, 
+    $or: [
+      {
+        blockStartDate: { $lte: this.blockEndDate },
+        blockEndDate: { $gte: this.blockStartDate },
+      },
+    ],
+  });
+  if (overlappingBlock) {
+    const err = new Error(
+      `Athlete already has a block overlapping this period: ${overlappingBlock.blockName}`
+    );
+    return next(err);
+  }
+
+  next();
+});
+
 const Block = mongoose.model("Block", blockSchema);
 
 // Validation for coaches
