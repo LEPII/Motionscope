@@ -26,19 +26,19 @@ const dayEnum = [
   "Saturday",
 ];
 
-const exerciseEntrySchema = new mongoose.Schema({
-  exerciseId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Exercise",
+const setSchema = new mongoose.Schema({
+  type: {
+    type: String,
+    enum: ["working", "warmup", "top", "drop"],
+    required: true,
+  },
+  createdBy: {
+    type: String,
+    enum: ["coach", "athlete"],
     required: true,
   },
 
-  // Coach's Fields
-  sets: {
-    type: Number,
-    min: 0,
-    max: 20,
-  },
+  // Coach's fields
   repsMin: { type: Number, min: 0, max: 30 },
   reps: { type: Number, min: 0, max: 30 },
   prescribedLoadMin: { type: Number, min: 0, max: 100 },
@@ -48,11 +48,29 @@ const exerciseEntrySchema = new mongoose.Schema({
   cuesFromCoach: { type: String, minLength: 1, maxLength: 1000 },
 
   // Athlete's fields
+  actualReps: { type: Number, min: 0, max: 30 },
   actualLoad: { type: Number, min: 0, max: 10000 },
   actualRPEMin: { type: Number, min: 0, max: 10 },
   actualRPE: { type: Number, min: 0, max: 10 },
   sideNote: { type: String, minLength: 1, maxLength: 1000 },
   cuesNote: { type: String, minLength: 1, maxLength: 2000 },
+});
+
+const exerciseEntrySchema = new mongoose.Schema({
+  exerciseId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Exercise",
+    required: true,
+  },
+  setsDetail: {
+    type: [setSchema],
+    validate: {
+      validator: function (v) {
+        return v.length > 0;
+      },
+      message: "At least one set must be provided.",
+    },
+  },
 });
 
 const dailyScheduleSchema = new mongoose.Schema({
@@ -193,7 +211,7 @@ blockSchema.pre("save", async function (next) {
 
   const overlappingBlock = await Block.findOne({
     athlete: this.athlete,
-    _id: { $ne: this._id }, 
+    _id: { $ne: this._id },
     $or: [
       {
         blockStartDate: { $lte: this.blockEndDate },
@@ -215,9 +233,10 @@ const Block = mongoose.model("Block", blockSchema);
 
 // Validation for coaches
 
-const exerciseEntryCoachSchema = Joi.object({
-  exerciseId: Joi.string().hex().length(24).required(),
-  sets: Joi.number().integer().min(0).max(20).required(),
+const setCoachSchema = Joi.object({
+  type: Joi.string().valid("working", "top", "drop").required(),
+  createdBy: Joi.string().valid("coach").required(),
+
   repsMin: Joi.number().integer().min(0).max(30).optional(),
   reps: Joi.number().integer().min(0).max(30).required(),
   prescribedLoadMin: Joi.number().min(0).max(100).optional(),
@@ -225,6 +244,29 @@ const exerciseEntryCoachSchema = Joi.object({
   prescribedRPEMin: Joi.number().min(0).max(10).optional(),
   prescribedRPE: Joi.number().min(0).max(10).required(),
   cuesFromCoach: Joi.string().min(1).max(1000).optional(),
+
+  // athlete-only fields blocked for coaches
+  actualReps: Joi.forbidden(),
+  actualLoad: Joi.forbidden(),
+  actualRPEMin: Joi.forbidden(),
+  actualRPE: Joi.forbidden(),
+  sideNote: Joi.forbidden(),
+  cuesNote: Joi.forbidden(),
+}).custom((value, helpers) => {
+  if (value.type === "warmup") {
+    return helpers.error("any.invalid", {
+      message: "Coaches cannot create warmup sets.",
+    });
+  }
+  return value;
+}, "Coach set restrictions");
+
+const exerciseEntryCoachSchema = Joi.object({
+  exerciseId: Joi.string().hex().length(24).required(),
+  setsDetail: Joi.array().items(setCoachSchema).min(1).required().messages({
+    "array.min": "At least one set must be provided for this exercise.",
+    "any.required": "Sets detail is required.",
+  }),
 });
 
 const dailyScheduleCoachSchema = Joi.object({
@@ -261,12 +303,49 @@ const blockCoachSchema = Joi.object({
 
 // Athlete's validation
 
-const exerciseEntryAthleteSchema = Joi.object({
-  actualLoad: Joi.number().min(0).optional(),
+const setAthleteSchema = Joi.object({
+  type: Joi.string().valid("warmup", "working", "top", "drop").required(),
+  createdBy: Joi.string().valid("athlete").required(),
+
+  // coach fields forbidden for athletes
+  repsMin: Joi.forbidden(),
+  reps: Joi.forbidden(),
+  prescribedLoadMin: Joi.forbidden(),
+  prescribedLoad: Joi.forbidden(),
+  prescribedRPEMin: Joi.forbidden(),
+  prescribedRPE: Joi.forbidden(),
+  cuesFromCoach: Joi.forbidden(),
+
+  // athlete editable fields
+  actualReps: Joi.number().min(0).max(30).optional(),
+  actualLoad: Joi.number().min(0).max(10000).optional(),
   actualRPEMin: Joi.number().min(0).max(10).optional(),
-  actualRPE: Joi.number().min(1).max(10).optional(),
+  actualRPE: Joi.number().min(0).max(10).optional(),
   sideNote: Joi.string().max(1000).optional(),
   cuesNote: Joi.string().max(2000).optional(),
+}).custom((value, helpers) => {
+  if (value.createdBy === "athlete" && value.type !== "warmup") {
+    return helpers.error("any.invalid", {
+      message:
+        "Athletes may only create warmup sets. Working/top/drop sets must come from the coach.",
+    });
+  }
+
+  if (value.createdBy === "athlete" && value.type === "warmup") {
+    if (!value.actualLoad && !value.actualRPE && !value.sideNote) {
+      return helpers.error("any.invalid", {
+        message:
+          "Warmup sets must include at least actualLoad, actualRPE, or a note.",
+      });
+    }
+  }
+
+  return value;
+}, "Set type restrictions");
+
+const exerciseEntryAthleteSchema = Joi.object({
+  exerciseId: Joi.string().hex().length(24).required(),
+  setsDetail: Joi.array().items(setAthleteSchema).min(1).required(),
 });
 
 const dailyScheduleAthleteSchema = Joi.object({
