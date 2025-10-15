@@ -304,7 +304,7 @@ const blockCoachSchema = Joi.object({
 // Athlete's validation
 
 const setAthleteSchema = Joi.object({
-  type: Joi.string().valid("warmup", "working", "top", "drop").required(),
+  type: Joi.string().valid("warmup").required(),
   createdBy: Joi.string().valid("athlete").required(),
 
   // coach fields forbidden for athletes
@@ -317,10 +317,10 @@ const setAthleteSchema = Joi.object({
   cuesFromCoach: Joi.forbidden(),
 
   // athlete editable fields
-  actualReps: Joi.number().min(0).max(30).optional(),
-  actualLoad: Joi.number().min(0).max(10000).optional(),
+  actualReps: Joi.number().min(0).max(30).required(),
+  actualLoad: Joi.number().min(0).max(10000).required(),
   actualRPEMin: Joi.number().min(0).max(10).optional(),
-  actualRPE: Joi.number().min(0).max(10).optional(),
+  actualRPE: Joi.number().min(0).max(10).required(),
   sideNote: Joi.string().max(1000).optional(),
   cuesNote: Joi.string().max(2000).optional(),
 }).custom((value, helpers) => {
