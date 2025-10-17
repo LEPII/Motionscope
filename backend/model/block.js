@@ -359,7 +359,9 @@ const weeklyScheduleAthleteSchema = Joi.object({
 export {
   Block,
   blockCoachSchema,
+  exerciseEntryCoachSchema,
   exerciseEntryAthleteSchema,
   weeklyScheduleSchema,
+  primExercisesEnum,
   dayEnum,
 };

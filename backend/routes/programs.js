@@ -1,5 +1,4 @@
 import {
-  getRosterList,
   getCurrentProgram,
   postProgram,
   deleteProgram,
@@ -11,10 +10,7 @@ const router = express.Router();
 
 // -- COACH'S ENDPOINTS --
 
-// Get List of All Athletes
-router.get("/", getRosterList);
-
-// Get a Single Program from a specific Athlete 
+// Get a Single Program from a specific Athlete
 router.get("/:athleteId", getCurrentProgram);
 
 // Post a Program - Must have no more / no less than 1 athlete associated

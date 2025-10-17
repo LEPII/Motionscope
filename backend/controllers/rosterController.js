@@ -2,41 +2,26 @@ import { User, validateUser } from "../model/user.js";
 import bcrypt from "bcrypt";
 import _ from "lodash";
 
-const getCurrentUser = async (req, res) => {
-  const user = await User.findById(req.user._id).select("-password");
-  res.send(user);
-};
+const getRosterList = async (req, res) => {
+  const coachId = req.user._id;
 
-const registerUser = async (req, res) => {
-  const { error } = validateUser.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
+  const coach = await User.findById(coachId).populate({
+    path: "athletes",
+    select: "username firstName lastName",
+  });
 
-  let user = await User.findOne({ email: req.body.email });
-  if (user) return res.status(400).send("User already registered");
+  if (!coach) {
+    return res.status(403).json({ message: "Coach not found." });
+  }
 
-  user = new User(
-    _.pick(req.body, [
-      "firstName",
-      "lastName",
-      "username",
-      "email",
-      "password",
-      "role",
-      "athletes",
-    ])
-  );
-  const salt = await bcrypt.genSalt(12);
-  user.password = await bcrypt.hash(user.password, salt);
+  const roster = coach.athletes.map((athlete) => ({
+    id: athlete._id,
+    username: athlete.username,
+    firstName: athlete.firstName,
+    lastName: athlete.lastName,
+  }));
 
-  await user.save();
-
-  // generates jwt token
-  const token = user.generateAuthToken();
-
-  // sets the following to the client ~> A. the response header with the JWT // B. the specified user properties
-  res
-    .header("x-auth-token", token)
-    .send(_.pick(user, ["_id", "firstName", "email", "role"]));
+  res.status(200).json(roster);
 };
 
 const addAthleteToRoster = async (req, res) => {
@@ -148,8 +133,7 @@ const deleteSelfFromTheCoachRoster = async (req, res) => {
 };
 
 export {
-  getCurrentUser,
-  registerUser,
+  getRosterList,
   addAthleteToRoster,
   deleteAthleteFromRoster,
   deleteSelfFromTheCoachRoster,

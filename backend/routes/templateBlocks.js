@@ -3,7 +3,6 @@ import {
   getTemplates,
   getTemplateById,
   deleteTemplate,
-  createBlockFromTemplate,
 } from "../controllers/templateBlockController";
 import express from "express";
 const router = express.Router();
@@ -21,8 +20,5 @@ router.get("/:templateId", getTemplateById);
 
 // Delete a Template
 router.delete("/:templateId", deleteTemplate);
-
-// Create a real Block from template
-router.post("/use/:templateId", createBlockFromTemplate);
 
 export default router;

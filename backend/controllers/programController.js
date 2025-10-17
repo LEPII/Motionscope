@@ -9,28 +9,6 @@ const sortTrainingItems = (items) => {
   );
 };
 
-const getRosterList = async (req, res) => {
-  const coachId = req.user._id;
-
-  const coach = await User.findById(coachId).populate({
-    path: "athletes",
-    select: "username firstName lastName",
-  });
-
-  if (!coach) {
-    return res.status(403).json({ message: "Coach not found." });
-  }
-
-  const roster = coach.athletes.map((athlete) => ({
-    id: athlete._id,
-    username: athlete.username,
-    firstName: athlete.firstName,
-    lastName: athlete.lastName,
-  }));
-
-  res.status(200).json(roster);
-};
-
 const getCurrentProgram = async (req, res) => {
   const coachId = req.user._id;
   const { athleteId } = req.params;
@@ -209,7 +187,6 @@ const getCurrentProgramForAthlete = async (req, res) => {
 
 export {
   postProgram,
-  getRosterList,
   getCurrentProgram,
   deleteProgram,
   toggleProgramArchive,
