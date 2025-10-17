@@ -1,9 +1,8 @@
 import {
   Block,
   blockCoachSchema,
-  exerciseEntryAthleteSchema,
-  exerciseEntryCoachSchema,
 } from "../model/block.js";
+import { SavedBlockTemplate } from "../model/templateBlock.js";
 import mongoose from "mongoose";
 
 /// -- COACH'S ENDPOINTS --
@@ -68,63 +67,6 @@ const postBlock = async (req, res) => {
   }
 };
 
-const postCoachExercise = async (req, res) => {
-  const { blockId, weekNumber, dayIndex } = req.params;
-  const coachId = req.user._id;
-
-  if (
-    !mongoose.Types.ObjectId.isValid(blockId) ||
-    isNaN(weekNumber) ||
-    isNaN(dayIndex)
-  ) {
-    return res.status(400).json({ message: "Invalid parameters." });
-  }
-
-  const { error, value } = exerciseEntryCoachSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      details: error.details.map((d) => d.message),
-    });
-  }
-
-  const block = await Block.findOne({ _id: blockId, coach: coachId });
-  if (!block) {
-    return res
-      .status(404)
-      .json({ message: "Block not found or access denied." });
-  }
-
-  const weekIndex = parseInt(weekNumber) - 1;
-  const dayIdx = parseInt(dayIndex);
-
-  if (
-    !block.blockSchedule?.[weekIndex] ||
-    !block.blockSchedule[weekIndex].dailySchedule?.[dayIdx]
-  ) {
-    return res
-      .status(404)
-      .json({ message: "Invalid week or day index in block schedule." });
-  }
-
-  block.blockSchedule[weekIndex].dailySchedule[dayIdx].exercises.push(value);
-
-  const updatedBlock = await block.save();
-
-  logger.info(
-    `Coach ${coachId} added new exercise to block ${blockId} (Week ${weekNumber}, Day ${dayIndex})`
-  );
-
-  res.status(201).json({
-    message: "Exercise added successfully.",
-    block: updatedBlock,
-  });
-};
-
 const updateBlock = async (req, res) => {
   const { blockId } = req.params;
   const coachId = req.user._id;
@@ -170,68 +112,6 @@ const updateBlock = async (req, res) => {
   });
 };
 
-const updateWeeklySchedule = async (req, res) => {
-  const { athleteId, blockId, weekNumber } = req.params;
-  const { value } = weeklyScheduleCoachSchema.validate(req.body);
-
-  const block = await Block.findOne({ _id: blockId, coach: req.user._id });
-  if (!block) return res.status(404).json({ message: "Block not found." });
-
-  const weekIndex = block.blockSchedule.findIndex(
-    (w) => w.weekNumber === parseInt(weekNumber)
-  );
-  if (weekIndex === -1)
-    return res.status(404).json({ message: "Week not found." });
-
-  block.blockSchedule[weekIndex] = {
-    ...block.blockSchedule[weekIndex],
-    ...value,
-  };
-  const updatedBlock = await block.save();
-  return res.json(updatedBlock);
-};
-
-const updateDailySchedule = async (req, res) => {
-  const { athleteId, blockId, weekNumber, dayIndex } = req.params;
-  const { value } = dailyScheduleCoachSchema.validate(req.body);
-
-  const block = await Block.findOne({ _id: blockId, coach: req.user._id });
-  if (!block) return res.status(404).json({ message: "Block not found." });
-
-  const week = block.blockSchedule.find(
-    (w) => w.weekNumber === parseInt(weekNumber)
-  );
-  if (!week) return res.status(404).json({ message: "Week not found." });
-
-  week.dailySchedule[dayIndex] = { ...week.dailySchedule[dayIndex], ...value };
-  const updatedBlock = await block.save();
-  return res.json(updatedBlock);
-};
-
-const updateSet = async (req, res) => {
-  const { blockId, weekNumber, dayIndex, setIndex } = req.params;
-  const { value } = setCoachSchema.validate(req.body);
-
-  const block = await Block.findOne({ _id: blockId, coach: req.user._id });
-  if (!block) return res.status(404).json({ message: "Block not found." });
-
-  const week = block.blockSchedule.find(
-    (w) => w.weekNumber === parseInt(weekNumber)
-  );
-  if (!week) return res.status(404).json({ message: "Week not found." });
-
-  const day = week.dailySchedule[dayIndex];
-  if (!day) return res.status(404).json({ message: "Day not found." });
-
-  day.exercises[value.exerciseId].setsDetail[setIndex] = {
-    ...day.exercises[value.exerciseId].setsDetail[setIndex],
-    ...value,
-  };
-
-  const updatedBlock = await block.save();
-  return res.json(updatedBlock);
-};
-
 const deleteBlock = async (req, res) => {
   const { athleteId, blockId } = req.params;
 
@@ -260,43 +140,44 @@ const deleteBlock = async (req, res) => {
   });
 };
 
-const deleteCoachExercise = async (req, res) => {
-  const { blockId, weekNumber, dayIndex, exerciseId } = req.params;
-  const coachId = req.user._id;
-
-  if (!mongoose.Types.ObjectId.isValid(blockId)) {
-    return res.status(400).json({ message: "Invalid block ID." });
-  }
-  const block = await Block.findOne({ _id: blockId, coach: coachId });
-  if (!block) {
-    return res
-      .status(404)
-      .json({ message: "Block not found or access denied." });
+const createBlockFromTemplate = async (req, res) => {
+  const { error } = blockCoachSchema.validate(req.body);
+  if (error) {
+    logger.warn(`Block validation failed: ${error.details[0].message}`);
+    return res.status(400).send(error.details[0].message);
   }
 
-  const week = block.blockSchedule.find(
-    (w) => w.weekNumber === parseInt(weekNumber)
-  );
-  if (!week) return res.status(404).json({ message: "Week not found." });
+  const { templateId } = req.params;
+  const { coachId } = req.user._id;
+  const {
+    athlete,
+    blockName,
+    numberOfWeeks,
+    days,
+    blockSchedule,
+    blockStartDate,
+    blockEndDate,
+  } = req.body;
 
-  const day = week.dailySchedule[dayIndex];
-  if (!day) return res.status(404).json({ message: "Day not found." });
+  const template = await SavedBlockTemplate.findById(templateId);
+  if (!template) return res.status(404).json({ message: "Template not found" });
 
-  const exerciseIndex = day.exercises.findIndex(
-    (ex) => ex._id.toString() === exerciseId
-  );
-  if (exerciseIndex === -1) {
-    return res.status(404).json({ message: "Exercise not found." });
-  }
-
-  day.exercises.splice(exerciseIndex, 1);
-
-  const updatedBlock = await block.save();
-
-  res.status(200).json({
-    message: "Exercise deleted successfully.",
-    block: updatedBlock,
+  const block = new Block({
+    coach: coachId,
+    athlete,
+    blockName: blockName || template.blockName,
+    numberOfWeeks: numberOfWeeks || template.numberOfWeeks,
+    days: days || template.days,
+    blockSchedule: blockSchedule || template.blockSchedule,
+    blockStartDate: blockStartDate || template.blockStartDate,
+    blockEndDate: blockEndDate || template.blockEndDate,
   });
+
+  await block.save();
+
+  logger.info(`Block created from template by coach ${coachId}: ${block._id}`);
+
+  res.status(201).json(block);
 };
 
 /// -- ATHLETE'S ENDPOINTS --
@@ -310,227 +191,13 @@ const getAllAthleteBlocks = async (req, res) => {
   res.send(allBlocks);
 };
 
-const updateAthleteSet = async (req, res) => {
-  const { blockId, exerciseId, setId } = req.params;
-  const athleteId = req.user._id;
-
-  if (
-    !mongoose.Types.ObjectId.isValid(blockId) ||
-    !mongoose.Types.ObjectId.isValid(exerciseId) ||
-    !mongoose.Types.ObjectId.isValid(setId)
-  ) {
-    return res.status(400).json({ message: "Invalid ID(s)." });
-  }
-
-  const block = await Block.findOne({ _id: blockId, athlete: athleteId });
-  if (!block) {
-    return res
-      .status(404)
-      .json({ message: "Block not found or access denied." });
-  }
-
-  let setUpdated = false;
-
-  for (const week of block.blockSchedule || []) {
-    for (const day of week.dailySchedule || []) {
-      for (const ex of day.exercises || []) {
-        if (ex._id.toString() === exerciseId) {
-          const set = ex.setsDetail.id(setId);
-          if (!set) continue;
-
-          if (set.createdBy === "coach") {
-            const allowedFields = [
-              "actualReps",
-              "actualLoad",
-              "actualRPEMin",
-              "actualRPE",
-              "sideNote",
-              "cuesNote",
-            ];
-            Object.keys(req.body).forEach((key) => {
-              if (allowedFields.includes(key)) {
-                set[key] = req.body[key];
-              }
-            });
-            setUpdated = true;
-          } else if (set.createdBy === "athlete" && set.type === "warmup") {
-            const allowedFields = ["actualReps", "actualLoad"];
-            Object.keys(req.body).forEach((key) => {
-              if (allowedFields.includes(key)) {
-                set[key] = req.body[key];
-              }
-            });
-            setUpdated = true;
-          } else {
-            return res.status(403).json({
-              message:
-                "You can only edit coach-created sets or your own warmup sets.",
-            });
-          }
-
-          break;
-        }
-      }
-      if (setUpdated) break;
-    }
-    if (setUpdated) break;
-  }
-
-  if (!setUpdated) {
-    return res.status(404).json({ message: "Set not found." });
-  }
-
-  const updatedBlock = await block.save();
-
-  res.status(200).json({
-    message: "Set updated successfully",
-    block: updatedBlock,
-  });
-};
-
-const postWarmUpAthleteSet = async (req, res) => {
-  const { blockId, exerciseId } = req.params;
-  const athleteId = req.user._id;
-
-  if (
-    !mongoose.Types.ObjectId.isValid(blockId) ||
-    !mongoose.Types.ObjectId.isValid(exerciseId)
-  ) {
-    return res.status(400).json({ message: "Invalid block or exercise ID." });
-  }
-
-  const { error, value } = setAthleteSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed",
-      details: error.details.map((d) => d.message),
-    });
-  }
-
-  const newSet = {
-    ...value,
-    type: "warmup",
-    createdBy: "athlete",
-    createdAt: new Date(),
-  };
-
-  const block = await Block.findOne({ _id: blockId, athlete: athleteId });
-  if (!block) {
-    return res
-      .status(404)
-      .json({ message: "Block not found or access denied." });
-  }
-
-  let exerciseFound = false;
-
-  for (const week of block.blockSchedule || []) {
-    for (const day of week.dailySchedule || []) {
-      for (const ex of day.exercises || []) {
-        if (ex._id.toString() === exerciseId) {
-          ex.setsDetail.push(newSet);
-          exerciseFound = true;
-          break;
-        }
-      }
-      if (exerciseFound) break;
-    }
-    if (exerciseFound) break;
-  }
-
-  if (!exerciseFound) {
-    return res
-      .status(404)
-      .json({ message: "Exercise not found in this block." });
-  }
-
-  const updatedBlock = await block.save();
-
-  res.status(201).json({
-    message: "Warmup set added successfully",
-    block: updatedBlock,
-  });
-};
-
-const deleteWarmUpAthleteSet = async (req, res) => {
-  const { blockId, exerciseId, setId } = req.params;
-  const athleteId = req.user._id;
-
-  if (
-    !mongoose.Types.ObjectId.isValid(blockId) ||
-    !mongoose.Types.ObjectId.isValid(exerciseId) ||
-    !mongoose.Types.ObjectId.isValid(setId)
-  ) {
-    return res.status(400).json({ message: "Invalid ID(s)." });
-  }
-
-  const block = await Block.findOne({ _id: blockId, athlete: athleteId });
-  if (!block) {
-    return res
-      .status(404)
-      .json({ message: "Block not found or access denied." });
-  }
-
-  let setDeleted = false;
-
-  for (const week of block.blockSchedule || []) {
-    for (const day of week.dailySchedule || []) {
-      for (const ex of day.exercises || []) {
-        if (ex._id.toString() === exerciseId) {
-          const setIndex = ex.setsDetail.findIndex(
-            (set) => set._id.toString() === setId
-          );
-
-          if (setIndex === -1) continue;
-
-          const set = ex.setsDetail[setIndex];
-
-          if (set.createdBy !== "athlete" || set.type !== "warmup") {
-            return res.status(403).json({
-              message:
-                "You can only delete warmup sets that you created yourself.",
-            });
-          }
-
-          ex.setsDetail.splice(setIndex, 1);
-          setDeleted = true;
-          break;
-        }
-      }
-      if (setDeleted) break;
-    }
-    if (setDeleted) break;
-  }
-
-  if (!setDeleted) {
-    return res.status(404).json({ message: "Set not found." });
-  }
-
-  const updatedBlock = await block.save();
-
-  res.status(200).json({
-    message: "Warmup set deleted successfully",
-    block: updatedBlock,
-  });
-};
-
 export {
   getSingleBlock,
   getAllBlocks,
   postBlock,
-  postCoachExercise,
   updateBlock,
-  deleteCoachExercise,
-  updateWeeklySchedule,
-  updateDailySchedule,
-  updateSet,
   deleteBlock,
+  createBlockFromTemplate,
   getCurrentBlock,
   getAllAthleteBlocks,
-  updateAthleteSet,
-  postWarmUpAthleteSet,
-  deleteWarmUpAthleteSet,
 };

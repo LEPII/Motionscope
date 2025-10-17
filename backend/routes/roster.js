@@ -2,24 +2,16 @@ import auth from "../middleware/auth.js";
 import express from "express";
 const router = express.Router();
 import {
-  getCurrentUser,
-  registerUser,
+  getRosterList,
   addAthleteToRoster,
   deleteAthleteFromRoster,
   deleteSelfFromTheCoachRoster,
-} from "../controllers/usersController.js";
-
-/// Open Routes
-
-// register user
-router.post("/", registerUser);
-
-/// Secure Routes.
-
-// get current user
-router.get("/me", auth, getCurrentUser);
+} from "../controllers/rosterController.js";
 
 // -- COACH'S ENDPOINTS --
+
+// Get List of All Athletes
+router.get("/", getRosterList);
 
 // Add Athlete to Roster
 router.post("/coaches/roster", addAthleteToRoster);

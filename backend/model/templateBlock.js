@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
-import { weeklyScheduleSchema, dayEnum } from "./block";
+import { weeklyScheduleSchema, dayEnum, primExercisesEnum } from "./block.js";
+import Joi from "joi";
 
 const savedBlockTemplateSchema = new mongoose.Schema({
   coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
