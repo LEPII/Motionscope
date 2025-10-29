@@ -44,14 +44,32 @@ const postExercise = async (req, res) => {
   const { error } = validateExercises.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { name, description, muscleGroup, type } = req.body;
+  const {
+    name,
+    description,
+    muscleGroup,
+    type,
+    movementPattern,
+    loadTypeEquipment,
+    typeOfExercise,
+    unilateralBilateral,
+  } = req.body;
   const { role, _id: userId } = req.user;
 
   if (!name) {
     return res.status(400).json({ message: "Name is required." });
   }
 
-  const allowedProperties = ["name", "description", "muscleGroup", "type"];
+  const allowedProperties = [
+    "name",
+    "description",
+    "muscleGroup",
+    "type",
+    "movementPattern",
+    "loadTypeEquipment",
+    "typeOfExercise",
+    "unilateralBilateral",
+  ];
   const receivedProperties = Object.keys(req.body);
 
   const hasOnlyAllowedProperties = receivedProperties.every((prop) =>
@@ -74,14 +92,34 @@ const postExercise = async (req, res) => {
         message: "Developers can only post exercises of type 'preset'.",
       });
     }
-    newExercise = { name, description, muscleGroup, type, createdBy: userId };
+    newExercise = {
+      name,
+      description,
+      muscleGroup,
+      type,
+      typeOfExercise,
+      movementPattern,
+      loadTypeEquipment,
+      unilateralBilateral,
+      createdBy: userId,
+    };
   } else if (role === "coach") {
     if (type !== "custom") {
       return res.status(403).json({
         message: "Coaches can only post exercises of type 'custom'.",
       });
     }
-    newExercise = { name, description, muscleGroup, type, createdBy: userId };
+    newExercise = {
+      name,
+      description,
+      muscleGroup,
+      type,
+      typeOfExercise,
+      movementPattern,
+      loadTypeEquipment,
+      unilateralBilateral,
+      createdBy: userId,
+    };
   } else {
     return res
       .status(403)
@@ -109,16 +147,22 @@ const updateExercise = async (req, res) => {
     return res.status(404).send("Exercise not found");
   }
 
-  const updates = {};
-  if (req.body.name !== undefined) {
-    updates.name = req.body.name;
-  }
-  if (req.body.description !== undefined) {
-    updates.description = req.body.description;
-  }
-  if (req.body.muscleGroup !== undefined) {
-    updates.muscleGroup = req.body.muscleGroup;
-  }
+  const allowedFields = [
+    "name",
+    "description",
+    "muscleGroup",
+    "typeOfExercise",
+    "movementPattern",
+    "loadTypeEquipment",
+    "unilateralBilateral",
+  ];
+
+  const updates = Object.keys(req.body)
+    .filter((key) => allowedFields.includes(key))
+    .reduce((obj, key) => {
+      obj[key] = req.body[key];
+      return obj;
+    }, {});
 
   if (Object.keys(updates).length === 0) {
     return res
@@ -131,43 +175,38 @@ const updateExercise = async (req, res) => {
   if (user.role === "coach") {
     if (
       exerciseToUpdate.type === "custom" &&
-      exerciseToUpdate.createdBy &&
-      exerciseToUpdate.createdBy.equals(user._id)
+      exerciseToUpdate.createdBy?.equals(user._id)
     ) {
-      const exercise = await Exercise.findByIdAndUpdate(
+      const updatedExercise = await Exercise.findByIdAndUpdate(
         exerciseId,
         { $set: updates },
         { new: true, runValidators: true }
       );
-      return res.send(exercise);
+      return res.send(updatedExercise);
     } else {
       return res
         .status(403)
         .send(
-          "Unauthorized. Coaches can only edit the name, description, and muscleGroup of their own custom exercises."
+          "Unauthorized. Coaches can only edit their own custom exercises."
         );
     }
   } else if (user.role === "developer") {
     if (exerciseToUpdate.type === "preset") {
-      const exercise = await Exercise.findByIdAndUpdate(
+      const updatedExercise = await Exercise.findByIdAndUpdate(
         exerciseId,
         { $set: updates },
         { new: true, runValidators: true }
       );
-      return res.send(exercise);
+      return res.send(updatedExercise);
     } else {
       return res
         .status(403)
-        .send(
-          "Unauthorized. Developers can only edit the name, description, and muscleGroup of preset exercises."
-        );
+        .send("Unauthorized. Developers can only edit preset exercises.");
     }
   } else {
     return res
       .status(403)
-      .send(
-        "Unauthorized. Only coaches and developers can edit the name, description, and muscleGroup of exercises."
-      );
+      .send("Unauthorized. Only coaches and developers can update exercises.");
   }
 };
 
