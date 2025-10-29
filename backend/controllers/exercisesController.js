@@ -44,7 +44,7 @@ const postExercise = async (req, res) => {
   const { error } = validateExercises.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
-  const { name, description, muscleGroup, type, ...otherProps } = req.body;
+  const { name, description, muscleGroup, type } = req.body;
   const { role, _id: userId } = req.user;
 
   if (!name) {
