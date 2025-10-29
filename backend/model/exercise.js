@@ -11,6 +11,16 @@ const exerciseSchema = new mongoose.Schema(
       maxLength: 100,
       unique: true,
     },
+    type: {
+      type: String,
+      enum: ["preset", "custom"],
+      required: true,
+      default: "custom",
+    },
+    createdBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
     description: { type: String, minLength: 10, maxLength: 1000 },
     muscleGroup: {
       type: [String],
@@ -51,15 +61,30 @@ const exerciseSchema = new mongoose.Schema(
         "Calves Soleus",
       ],
     },
-    type: {
-      type: String,
-      enum: ["preset", "custom"],
-      required: true,
-      default: "custom",
+    movementPattern: {
+      type: [String],
+      enum: [
+        "Push",
+        "Pull",
+        "HingeS",
+        "Squat",
+        "LungeStep",
+        "Rotation",
+        "AntiRotation",
+      ],
     },
-    createdBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+    loadTypeEquipment: {
+      type: [String],
+      enum: ["Barbell", "Dumbbell", "Bodyweight", "Machine", "Cable Machine"],
+    },
+    typeOfExercise: {
+      type: String,
+      enum: ["Compound", "Isolation"],
+      required: true,
+    },
+    unilateralBilateral: {
+      type: [String],
+      enum: ["Bilateral", "Unilateral"],
     },
   },
   { timestamps: true }
@@ -69,6 +94,8 @@ const Exercise = mongoose.model("exercise", exerciseSchema);
 
 const validateExercises = Joi.object({
   name: Joi.string().min(3).max(100).required(),
+  type: Joi.string().valid("preset", "custom").required().default("custom"),
+  createdBy: Joi.string(),
   description: Joi.string().min(10).max(1000),
   muscleGroup: Joi.array().items(
     Joi.string().valid(
@@ -107,9 +134,31 @@ const validateExercises = Joi.object({
       "Calves Gastrocnemius",
       "Calves Soleus"
     )
-  ),
-  type: Joi.string().valid("preset", "custom").required().default("custom"),
-  createdBy: Joi.string(),
+  ).optional(),
+  movementPattern: Joi.array().items(
+    Joi.string().valid(
+      "Push",
+      "Pull",
+      "HingeS",
+      "Squat",
+      "LungeStep",
+      "Rotation",
+      "AntiRotation"
+    )
+  ).optional(),
+  loadTypeEquipment: Joi.array().items(
+    Joi.string().valid(
+      "Barbell",
+      "Dumbbell",
+      "Bodyweight",
+      "Machine",
+      "Cable Machine"
+    )
+  ).optional(),
+  typeOfExercise: Joi.string().valid("Compound", "Isolation").required(),
+  unilateralBilateral: Joi.array().items(
+    Joi.string().valid("Bilateral", "Unilateral")
+  ).optional(),
 });
 
 export { exerciseSchema, Exercise, validateExercises };
