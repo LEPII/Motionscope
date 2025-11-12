@@ -66,7 +66,7 @@ const exerciseSchema = new mongoose.Schema(
       enum: [
         "Push",
         "Pull",
-        "HingeS",
+        "Hinge",
         "Squat",
         "LungeStep",
         "Rotation",
