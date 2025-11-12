@@ -1,6 +1,6 @@
 import {
   getSingleExercise,
-  getAllExercises,
+  getExercises,
   postExercise,
   updateExercise,
   deleteExercise,
@@ -14,7 +14,7 @@ const router = express.Router();
 router.get("/:id", getSingleExercise);
 
 // GET all Custom Exercises
-router.get("/", getAllExercises);
+router.get("/", getExercises);
 
 // POST a Single Custom Exercise. Devs can only post Preset. Coaches can only post custom. 
 router.post("/", postExercise);

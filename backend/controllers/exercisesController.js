@@ -25,19 +25,59 @@ const getSingleExercise = async (req, res) => {
   }
 };
 
-const getAllExercises = async (req, res) => {
-  if (req.user && req.user.role === "coach") {
-    const allExercise = await Exercise.find({
-      $or: [{ type: "preset" }, { type: "custom", createdBy: req.user._id }],
-    });
-    res.send(allExercise);
+const getExercises = async (req, res) => {
+  const { role, _id: userId } = req.user;
+
+  const {
+    search = "",
+    muscleGroup,
+    movementPattern,
+    loadTypeEquipment,
+    typeOfExercise,
+    sortField = "name",
+    sortOrder = "asc",
+    page = 1,
+    limit = 50,
+  } = req.query;
+
+  const query = {};
+
+  if (role === "coach") {
+    query.$or = [{ type: "custom", createdBy: userId }, { type: "preset" }];
+  } else if (role === "developer") {
+    query.$or = [{ type: "preset" }, { type: "custom", createdBy: userId }];
   } else {
-    const error = new Error(
-      "Unauthorized. Coaches only can access all exercises."
-    );
-    error.statusCode = 403;
-    throw error;
+    return res.status(403).json({ message: "Unauthorized" });
   }
+
+  if (search) {
+    query.name = { $regex: search, $options: "i" };
+  }
+
+  if (muscleGroup) query.muscleGroup = { $in: muscleGroup.split(",") };
+  if (movementPattern)
+    query.movementPattern = { $in: movementPattern.split(",") };
+  if (loadTypeEquipment)
+    query.loadTypeEquipment = { $in: loadTypeEquipment.split(",") };
+  if (typeOfExercise) query.typeOfExercise = typeOfExercise;
+
+  const sortOption = { [sortField]: sortOrder === "asc" ? 1 : -1 };
+
+  const skip = (parseInt(page) - 1) * parseInt(limit);
+
+  const exercises = await Exercise.find(query)
+    .sort(sortOption)
+    .skip(skip)
+    .limit(parseInt(limit));
+
+  const total = await Exercise.countDocuments(query);
+
+  res.json({
+    exercises,
+    total,
+    page: parseInt(page),
+    totalPages: Math.ceil(total / parseInt(limit)),
+  });
 };
 
 const postExercise = async (req, res) => {
@@ -263,7 +303,7 @@ const deleteExercise = async (req, res) => {
 
 export {
   getSingleExercise,
-  getAllExercises,
+  getExercises,
   postExercise,
   updateExercise,
   deleteExercise,
