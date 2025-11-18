@@ -27,10 +27,9 @@ const validateAthleteStats = Joi.object({
 
 const validateAthleteStatsUpdate = Joi.object({
   oneRepMaxes: Joi.object({
-    squat: Joi.number().min(0).max(2000).optional(),
-    bench: Joi.number().min(0).max(2000).optional(),
-    deadlift: Joi.number().min(0).max(2000).optional(),
-    overheadPress: Joi.number().min(0).max(2000).optional(),
+    squat: Joi.number().min(0).max(100000).optional(),
+    bench: Joi.number().min(0).max(100000).optional(),
+    deadlift: Joi.number().min(0).max(100000).optional(),
   }).optional(),
 }).min(1);
 
