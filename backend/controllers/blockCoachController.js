@@ -1,4 +1,12 @@
-import { Block, exerciseEntryCoachSchema } from "../model/block.js";
+import {
+  Block,
+  exerciseEntryCoachSchema,
+  weeklyScheduleCoachSchema,
+  dailyScheduleCoachSchema,
+  setCoachSchema,
+} from "../model/block.js";
+import { AthleteStats } from "../model/stats.js";
+import { populateBlockTargetLoads } from "../utils/trainingLoad.js";
 import mongoose from "mongoose";
 
 const postCoachExercise = async (req, res) => {
@@ -59,7 +67,7 @@ const postCoachExercise = async (req, res) => {
 };
 
 const updateWeeklySchedule = async (req, res) => {
-  const { athleteId, blockId, weekNumber } = req.params;
+  const { blockId, weekNumber } = req.params;
   const { value } = weeklyScheduleCoachSchema.validate(req.body);
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
@@ -71,16 +79,36 @@ const updateWeeklySchedule = async (req, res) => {
   if (weekIndex === -1)
     return res.status(404).json({ message: "Week not found." });
 
+  const requiresRecalc =
+    value.dailySchedule &&
+    value.dailySchedule.some((day) =>
+      day.exercises?.some((ex) =>
+        ex.setsDetail?.some(
+          (set) =>
+            set.prescribedLoad != null ||
+            set.prescribedLoadMin != null ||
+            set.prescribedRPE != null ||
+            set.prescribedRPEMin != null
+        )
+      )
+    );
+
   block.blockSchedule[weekIndex] = {
     ...block.blockSchedule[weekIndex],
     ...value,
   };
+
+  if (requiresRecalc) {
+    const athleteStats = await AthleteStats.findOne({ user: block.athlete });
+    await populateBlockTargetLoads(block, athleteStats);
+  }
+
   const updatedBlock = await block.save();
   return res.json(updatedBlock);
 };
 
 const updateDailySchedule = async (req, res) => {
-  const { athleteId, blockId, weekNumber, dayIndex } = req.params;
+  const { blockId, weekNumber, dayIndex } = req.params;
   const { value } = dailyScheduleCoachSchema.validate(req.body);
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
@@ -91,13 +119,34 @@ const updateDailySchedule = async (req, res) => {
   );
   if (!week) return res.status(404).json({ message: "Week not found." });
 
-  week.dailySchedule[dayIndex] = { ...week.dailySchedule[dayIndex], ...value };
+  const day = week.dailySchedule[dayIndex];
+  if (!day) return res.status(404).json({ message: "Day not found." });
+
+  const requiresRecalc =
+    value.exercises &&
+    value.exercises.some((ex) =>
+      ex.setsDetail?.some(
+        (set) =>
+          set.prescribedLoad != null ||
+          set.prescribedLoadMin != null ||
+          set.prescribedRPE != null ||
+          set.prescribedRPEMin != null
+      )
+    );
+
+  week.dailySchedule[dayIndex] = { ...day, ...value };
+
+  if (requiresRecalc) {
+    const athleteStats = await AthleteStats.findOne({ user: block.athlete });
+    await populateBlockTargetLoads(block, athleteStats);
+  }
+
   const updatedBlock = await block.save();
   return res.json(updatedBlock);
 };
 
 const updateSet = async (req, res) => {
-  const { blockId, weekNumber, dayIndex, setIndex } = req.params;
+  const { blockId, weekNumber, dayIndex, exerciseId, setId } = req.params;
   const { value } = setCoachSchema.validate(req.body);
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
@@ -111,10 +160,19 @@ const updateSet = async (req, res) => {
   const day = week.dailySchedule[dayIndex];
   if (!day) return res.status(404).json({ message: "Day not found." });
 
-  day.exercises[value.exerciseId].setsDetail[setIndex] = {
-    ...day.exercises[value.exerciseId].setsDetail[setIndex],
-    ...value,
-  };
+  const exercise = day.exercises.find(
+    (ex) => ex.exerciseId.toString() === exerciseId
+  );
+  if (!exercise)
+    return res.status(404).json({ message: "Exercise not found." });
+
+  const set = exercise.setsDetail.id(setId);
+  if (!set) return res.status(404).json({ message: "Set not found." });
+
+  Object.assign(set, value);
+
+  const athleteStats = await AthleteStats.findOne({ user: block.athlete });
+  await populateBlockTargetLoads(block, athleteStats);
 
   const updatedBlock = await block.save();
   return res.json(updatedBlock);

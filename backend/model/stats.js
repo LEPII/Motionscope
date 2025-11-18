@@ -10,7 +10,7 @@ const athleteStatsSchema = new mongoose.Schema({
   },
 });
 
-const AthleteProfile = mongoose.model("AthleteStats", athleteStatsSchema);
+const AthleteStats = mongoose.model("AthleteStats", athleteStatsSchema);
 
 const validateAthleteStats = Joi.object({
   user: Joi.string().hex().length(24).required(),
@@ -34,4 +34,4 @@ const validateAthleteStatsUpdate = Joi.object({
   }).optional(),
 }).min(1);
 
-export { AthleteProfile, validateAthleteStats, validateAthleteStatsUpdate };
+export { AthleteStats, validateAthleteStats, validateAthleteStatsUpdate };

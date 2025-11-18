@@ -243,9 +243,11 @@ const setCoachSchema = Joi.object({
   repsMin: Joi.number().integer().min(0).max(30).optional(),
   reps: Joi.number().integer().min(0).max(30).required(),
   prescribedLoadMin: Joi.number().min(0).max(100).optional(),
-  prescribedLoad: Joi.number().min(0).max(100).required(),
+  prescribedLoad: Joi.number().min(0).max(100).optional(),
   prescribedRPEMin: Joi.number().min(0).max(10).optional(),
   prescribedRPE: Joi.number().min(0).max(10).required(),
+  targetLoadMin: Joi.forbidden(),
+  targetLoad: Joi.forbidden(),
   cuesFromCoach: Joi.string().min(1).max(1000).optional(),
 
   // athlete-only fields blocked for coaches
@@ -317,6 +319,8 @@ const setAthleteSchema = Joi.object({
   prescribedLoad: Joi.forbidden(),
   prescribedRPEMin: Joi.forbidden(),
   prescribedRPE: Joi.forbidden(),
+  targetLoadMin: Joi.forbidden(),
+  targetLoad: Joi.forbidden(),
   cuesFromCoach: Joi.forbidden(),
 
   // athlete editable fields
@@ -363,6 +367,9 @@ export {
   Block,
   blockCoachSchema,
   exerciseEntryCoachSchema,
+  weeklyScheduleCoachSchema,
+  dailyScheduleCoachSchema,
+  setCoachSchema,
   exerciseEntryAthleteSchema,
   weeklyScheduleSchema,
   primExercisesEnum,

@@ -1,9 +1,9 @@
-import {
-  Block,
-  blockCoachSchema,
-} from "../model/block.js";
+import { Block, blockCoachSchema } from "../model/block.js";
 import { SavedBlockTemplate } from "../model/templateBlock.js";
 import mongoose from "mongoose";
+import { Program } from "../model/program.js";
+import { AthleteStats } from "../model/stats.js";
+import { populateBlockTargetLoads } from "../utils/trainingLoad.js";
 
 /// -- COACH'S ENDPOINTS --
 
@@ -18,7 +18,7 @@ const getAllBlocks = async (req, res) => {
 };
 
 const postBlock = async (req, res) => {
-  const { athleteId } = req.params.athleteId;
+  const { athleteId } = req.params;
   const coachId = req.user._id;
 
   const { error, value } = blockCoachSchema.validate(req.body, {
@@ -36,15 +36,25 @@ const postBlock = async (req, res) => {
   const blockData = { ...value, coach: coachId, athlete: athleteId };
   const { programId } = req.body;
 
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
-    session.startTransaction();
     const program = await Program.findById(programId).session(session);
     if (!program) {
       await session.abortTransaction();
       return res.status(404).json({ message: "Program not found" });
     }
 
-    const [savedBlock] = await Block.create([blockData], { session });
+    const athleteStats = await AthleteStats.findOne({
+      user: athleteId,
+    }).session(session);
+
+    const block = new Block(blockData);
+
+    await populateBlockTargetLoads(block, athleteStats);
+
+    const savedBlock = await block.save({ session });
 
     program.blocks.push(savedBlock._id);
     await program.save({ session });
@@ -65,6 +75,40 @@ const postBlock = async (req, res) => {
   } finally {
     await session.endSession();
   }
+};
+
+const checkIfPrescribedLoadsChanged = (updatedPayload) => {
+  if (!updatedPayload.blockSchedule) return false;
+
+  const updatedWeeks = updatedPayload.blockSchedule;
+
+  for (let w = 0; w < updatedWeeks.length; w++) {
+    const updatedWeek = updatedWeeks[w];
+    if (!updatedWeek?.dailySchedule) continue;
+
+    for (let d = 0; d < updatedWeek.dailySchedule.length; d++) {
+      const updatedDay = updatedWeek.dailySchedule[d];
+      if (!updatedDay?.exercises) continue;
+
+      for (let e = 0; e < updatedDay.exercises.length; e++) {
+        const updatedExercise = updatedDay.exercises[e];
+        if (!updatedExercise?.setsDetail) continue;
+
+        for (const set of updatedExercise.setsDetail) {
+          if (
+            set.prescribedLoad != null ||
+            set.prescribedLoadMin != null ||
+            set.prescribedRPE != null ||
+            set.prescribedRPEMin != null
+          ) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+
+  return false;
 };
 
 const updateBlock = async (req, res) => {
@@ -102,6 +146,13 @@ const updateBlock = async (req, res) => {
   // If numberOfWeeks decreased, frontend warning message expected
   if (value.numberOfWeeks && value.numberOfWeeks < block.blockSchedule.length) {
     block.blockSchedule = block.blockSchedule.slice(0, value.numberOfWeeks);
+  }
+
+  const requiresLoadRecalc = checkIfPrescribedLoadsChanged(value);
+
+  if (requiresLoadRecalc) {
+    const athleteStats = await AthleteStats.findOne({ user: block.athlete });
+    await populateBlockTargetLoads(block, athleteStats); 
   }
 
   const updatedBlock = await block.save();
