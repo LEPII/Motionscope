@@ -15,17 +15,14 @@ router.post(
 );
 
 // Update a specific week (e.g., change weekStartDate or replace all daily schedules).
-router.patch("/:athleteId/:blockId/week/:weekNumber", updateWeeklySchedule);
+router.patch("/:blockId/week/:weekNumber", updateWeeklySchedule);
 
 // Update a single day’s exercises within a specific week.
-router.patch(
-  "/:athleteId/:blockId/week/:weekNumber/day/:dayIndex",
-  updateDailySchedule
-);
+router.patch("/:blockId/week/:weekNumber/day/:dayIndex", updateDailySchedule);
 
 // Update individual sets (like reps, prescribedLoad, actualLoad, etc.)
 router.patch(
-  "/:athleteId/:blockId/week/:weekNumber/day/:dayIndex/set/:setIndex",
+  "/:blockId/week/:weekNumber/day/:dayIndex/exercise/:exerciseId/set/:setId",
   updateSet
 );
 // Deletes a Specific Exercise

@@ -52,6 +52,11 @@ const userSchema = new mongoose.Schema({
     enum: ["coach", "athlete", "developer"],
     required: true,
   },
+  unitPreference: {
+    type: String,
+    enum: ["lbs", "kg"],
+    default: "lbs",
+  },
   athletes: [
     {
       type: mongoose.Schema.Types.ObjectId,
@@ -77,7 +82,14 @@ const validateUser = Joi.object({
   email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
   password: Joi.string().min(8).max(1024).required(),
   role: Joi.string().valid("coach", "athlete", "developer").required(),
+  unitPreference: Joi.string().valid("lbs", "kg").default("lbs"),
   athletes: Joi.array().items(Joi.string().hex().length(24)),
 });
 
-export { User, validateUser };
+const validateUserUpdate = Joi.object({
+  name: Joi.string().min(1).max(100).optional(),
+  email: Joi.string().email().optional(),
+  unitPreference: Joi.string().valid("lbs", "kg").optional(),
+}).min(1);
+
+export { User, validateUser, validateUserUpdate };
