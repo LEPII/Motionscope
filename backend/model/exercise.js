@@ -86,6 +86,10 @@ const exerciseSchema = new mongoose.Schema(
       type: [String],
       enum: ["Bilateral", "Unilateral"],
     },
+    prCategory: {
+      type: String,
+      enum: ["squat", "bench", "deadlift", null],
+    },
   },
   { timestamps: true }
 );

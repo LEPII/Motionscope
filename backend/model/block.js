@@ -45,6 +45,9 @@ const setSchema = new mongoose.Schema({
   prescribedLoad: { type: Number, min: 0, max: 100 },
   prescribedRPEMin: { type: Number, min: 0, max: 10 },
   prescribedRPE: { type: Number, min: 0, max: 10 },
+  // - Derived absolute target loads (in lbs, from PR)
+  targetLoadMin: { type: Number, min: 0 },
+  targetLoad: { type: Number, min: 0 },
   cuesFromCoach: { type: String, minLength: 1, maxLength: 1000 },
 
   // Athlete's fields
