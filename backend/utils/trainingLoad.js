@@ -1,4 +1,4 @@
-import { Exercise } from "../model/exercise";
+import { Exercise } from "../model/exercise.js";
 
 const roundToNearest5 = (value) => {
   if (value == null) return null;

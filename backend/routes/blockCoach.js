@@ -3,6 +3,9 @@ import {
   updateWeeklySchedule,
   updateDailySchedule,
   updateSet,
+  duplicateWeek,
+  duplicateDailySchedule,
+  duplicateExerciseEntry,
   deleteCoachExercise,
 } from "../controllers/blockCoachController.js";
 import express from "express";
@@ -25,6 +28,22 @@ router.patch(
   "/:blockId/week/:weekNumber/day/:dayIndex/exercise/:exerciseId/set/:setId",
   updateSet
 );
+
+// Duplicate a whole week in a block (coach only)
+router.post("/:athleteId/:blockId/week/:weekNumber/duplicate", duplicateWeek);
+
+// Duplicate a day's schedule into another day in the same week
+router.post(
+  "/:athleteId/:blockId/week/:weekNumber/day/:dayIndex/duplicate",
+  duplicateDailySchedule
+);
+
+// Duplicate a single exercise within a day
+router.post(
+  "/:athleteId/:blockId/week/:weekNumber/day/:dayIndex/exercise/:exerciseId/duplicate",
+  duplicateExerciseEntry
+);
+
 // Deletes a Specific Exercise
 router.delete(
   "/coach/:blockId/weeks/:weekNumber/days/:dayIndex/exercises/:exerciseId",
