@@ -64,3 +64,5 @@ const cloneExercise = (exercise) => {
 
   return plainEx;
 };
+
+export {cloneWeek, cloneDay, cloneExercise }

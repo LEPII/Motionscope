@@ -5,6 +5,7 @@ import {
   dailyScheduleCoachSchema,
   setCoachSchema,
 } from "../model/block.js";
+import { cloneWeek, cloneDay, cloneExercise } from "../utils/clone.js";
 import { AthleteStats } from "../model/stats.js";
 import { populateBlockTargetLoads } from "../utils/trainingLoad.js";
 import mongoose from "mongoose";
