@@ -322,6 +322,90 @@ const duplicateExerciseEntry = async (req, res) => {
   });
 };
 
+const deleteWeeklySchedule = async (req, res) => {
+  const { blockId, weekNumber } = req.params;
+  const coachId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(blockId)) {
+    return res.status(400).json({ message: "Invalid block ID." });
+  }
+
+  const weekNum = parseInt(weekNumber, 10);
+  if (Number.isNaN(weekNum) || weekNum < 1) {
+    return res.status(400).json({ message: "Invalid weekNumber." });
+  }
+
+  const block = await Block.findOne({ _id: blockId, coach: coachId });
+  if (!block) return res.status(404).json({ message: "Block not found." });
+
+  const idx = block.blockSchedule.findIndex((w) => w.weekNumber === weekNum);
+  if (idx === -1) return res.status(404).json({ message: "Week not found." });
+
+  block.blockSchedule.splice(idx, 1);
+
+  block.numberOfWeeks = block.blockSchedule.length;
+
+  block.blockSchedule.forEach((w, i) => {
+    w.weekNumber = i + 1;
+
+    // Optional: recompute weekStartDate from blockStartDate if present
+    if (block.blockStartDate) {
+      const start = new Date(block.blockStartDate);
+      start.setDate(start.getDate() + i * 7);
+      w.weekStartDate = start;
+    }
+  });
+
+  const updated = await block.save();
+
+  return res.status(200).json({
+    message: "Week deleted successfully.",
+    block: updated,
+  });
+};
+
+const deleteDailySchedule = async (req, res) => {
+  const { blockId, weekNumber, dayIndex } = req.params;
+  const coachId = req.user._id;
+
+  if (!mongoose.Types.ObjectId.isValid(blockId)) {
+    return res.status(400).json({ message: "Invalid block ID." });
+  }
+
+  const weekNum = parseInt(weekNumber, 10);
+  const dIdx = parseInt(dayIndex, 10);
+
+  if (Number.isNaN(weekNum) || weekNum < 1) {
+    return res.status(400).json({ message: "Invalid weekNumber." });
+  }
+  if (Number.isNaN(dIdx) || dIdx < 0) {
+    return res.status(400).json({ message: "Invalid dayIndex." });
+  }
+
+  const block = await Block.findOne({ _id: blockId, coach: coachId });
+  if (!block) return res.status(404).json({ message: "Block not found." });
+
+  const week = block.blockSchedule.find((w) => w.weekNumber === weekNum);
+  if (!week) return res.status(404).json({ message: "Week not found." });
+
+  if (!week.dailySchedule || dIdx >= week.dailySchedule.length) {
+    return res.status(404).json({ message: "Day not found." });
+  }
+
+  // Clear the day (keeps array length the same)
+  week.dailySchedule[dIdx] = {
+    primExercises: [],
+    exercises: [],
+  };
+
+  const updated = await block.save();
+
+  return res.status(200).json({
+    message: "Day cleared successfully.",
+    block: updated,
+  });
+};
+
 const deleteCoachExercise = async (req, res) => {
   const { blockId, weekNumber, dayIndex, exerciseId } = req.params;
   const coachId = req.user._id;
@@ -369,5 +453,7 @@ export {
   duplicateWeek, 
   duplicateDailySchedule, 
   duplicateExerciseEntry, 
+  deleteWeeklySchedule,
+  deleteDailySchedule,
   deleteCoachExercise,
 };
