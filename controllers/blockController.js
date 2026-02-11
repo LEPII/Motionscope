@@ -163,6 +163,42 @@ const updateBlock = async (req, res) => {
   });
 };
 
+const toggleBlockArchive = async (req, res) => {
+  const coachId = req.user._id;
+  const { blockId } = req.params;
+  const { archive } = req.body;
+
+  if (typeof archive !== "boolean") {
+    return res
+      .status(400)
+      .json({ message: 'Invalid request: "archive" must be a boolean.' });
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(blockId)) {
+    return res.status(400).json({ message: "Invalid block ID." });
+  }
+
+  const block = await Block.findOneAndUpdate(
+    {
+      _id: blockId,
+      coach: coachId, 
+    },
+    { $set: { isArchived: archive } },
+    { new: true }
+  );
+
+  if (!block) {
+    return res.status(404).json({ message: "Block not found or access denied." });
+  }
+
+  const statusMessage = archive ? "archived" : "unarchived";
+
+  return res.status(200).json({
+    message: `Block ${statusMessage} successfully`,
+    block,
+  });
+};
+
 const deleteBlock = async (req, res) => {
   const { athleteId, blockId } = req.params;
 
@@ -247,6 +283,7 @@ export {
   getAllBlocks,
   postBlock,
   updateBlock,
+  toggleBlockArchive,
   deleteBlock,
   createBlockFromTemplate,
   getCurrentBlock,

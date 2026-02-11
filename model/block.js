@@ -104,6 +104,10 @@ const blockSchema = new mongoose.Schema({
     ref: "User",
     required: true,
   },
+  isArchived: {
+  type: Boolean,
+  default: false,
+  },
   blockName: { type: String, minLength: 1, maxLength: 50, required: true },
   numberOfWeeks: {
     type: Number,
@@ -295,6 +299,7 @@ const weeklyScheduleCoachSchema = Joi.object({
 const blockCoachSchema = Joi.object({
   coach: Joi.string().hex().length(24).required(),
   athlete: Joi.string().hex().length(24).required(),
+  isArchived: Joi.boolean().optional(),
   blockName: Joi.string().min(1).max(50).required(),
   numberOfWeeks: Joi.number().integer().min(1).max(12).required(),
   blockStartDate: Joi.date().iso().required(),
