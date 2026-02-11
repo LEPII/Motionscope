@@ -6,6 +6,8 @@ import {
   duplicateWeek,
   duplicateDailySchedule,
   duplicateExerciseEntry,
+  deleteWeeklySchedule,
+  deleteDailySchedule,
   deleteCoachExercise,
 } from "../controllers/blockCoachController.js";
 import express from "express";
@@ -43,6 +45,12 @@ router.post(
   "/:athleteId/:blockId/week/:weekNumber/day/:dayIndex/exercise/:exerciseId/duplicate",
   duplicateExerciseEntry
 );
+
+// Week delete
+router.delete("/block/:blockId/week/:weekNumber", deleteWeeklySchedule);
+
+// Day delete (clears the day by index)
+router.delete("/block/:blockId/week/:weekNumber/day/:dayIndex", deleteDailySchedule);
 
 // Deletes a Specific Exercise
 router.delete(
