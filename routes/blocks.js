@@ -4,6 +4,7 @@ import {
   getAllBlocks,
   postBlock,
   updateBlock,
+  toggleBlockArchive, 
   deleteBlock,
   createBlockFromTemplate,
   getCurrentBlock,
@@ -25,6 +26,9 @@ router.post("/:athleteId", blockValidation, postBlock);
 
 // Update a Block from a Specific Athlete
 router.patch("/:athleteId/:blockId", blockValidation, updateBlock);
+
+// Archive a Block from a Specific Athlete
+router.patch("/block/:blockId/archive", toggleBlockArchive);
 
 // Delete a Block from a Specific Athlete
 router.delete("/:athleteId/:blockId", deleteBlock);
