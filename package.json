@@ -15,6 +15,7 @@
     "bcrypt": "^5.1.1",
     "config": "^3.3.12",
     "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
     "express": "^4.19.2",
     "express-async-errors": "^3.1.1",
     "joi": "^17.13.3",
@@ -23,7 +24,9 @@
     "lodash": "^4.17.21",
     "mongodb": "^6.8.0",
     "mongoose": "^8.5.4",
+    "multer": "^2.0.2",
     "nodemon": "^3.1.10",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "zod": "^4.3.6"
   }
 }

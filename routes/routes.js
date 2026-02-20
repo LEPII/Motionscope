@@ -6,6 +6,7 @@ import blocks from "./blocks.js";
 import compDay from "./compDay.js";
 import exercises from "./exercises.js";
 import programs from "./programs.js";
+import programImportExport from "./programImportExport.js";
 import questionnaires from "./questionnaires.js";
 import roster from "./roster.js";
 import error from "../middleware/error.js";
@@ -19,6 +20,7 @@ export default function myRoutes(app) {
   app.use("/api/compDay", compDay);
   app.use("/api/exercises", exercises);
   app.use("/api/programs", programs);
+  app.use("/api/programImportExport", programImportExport);
   app.use("/api/questionnaires", questionnaires);
   app.use("/api/roster", roster);
   app.use(error);
