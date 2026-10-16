@@ -192,7 +192,7 @@ const blockSchema = new mongoose.Schema({
         "The number of weekly schedules in 'blockSchedule' must match 'numberOfWeeks'.",
     },
   },
-});
+}, { timestamps: true });
 
 blockSchema.pre("validate", function (next) {
   if (this.blockSchedule && this.blockSchedule.length > 0 && this.days) {
