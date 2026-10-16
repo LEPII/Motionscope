@@ -11,7 +11,8 @@ export default async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.MOTIONSCOPE_JWT_PRIVATE_KEY);
-    req.user = await User.findById(decoded.userId).select("-password");
+    req.user = await User.findById(decoded._id).select("-password");
+    if (!req.user) return res.status(401).send("Access denied. User not found.");
     next();
   } catch (ex) {
     res.status(400).send("Invalid Token.");
