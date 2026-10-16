@@ -7,73 +7,108 @@ import mongoose from "mongoose";
 dotenv.config();
 Joi.objectId = JoiObjectId(Joi);
 
-const userSchema = new mongoose.Schema({
-  firstName: {
-    type: String,
-    minLength: 1,
-    maxLength: 50,
-    required: true,
-    trim: true,
-  },
-  lastName: {
-    type: String,
-    minLength: 1,
-    maxLength: 50,
-    required: true,
-    trim: true,
-  },
-  username: {
-    type: String,
-    minLength: 5,
-    maxLength: 30,
-    required: true,
-    trim: true,
-    unique: true,
-  },
-  email: {
-    type: String,
-    minLength: 5,
-    maxLength: 255,
-    required: true,
-    unique: true,
-    trim: true,
-    lowercase: true,
-    match:
-      /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
-  },
-  password: {
-    type: String,
-    required: true,
-    minLength: 8,
-    maxLength: 1024,
-  },
-  role: {
-    type: String,
-    enum: ["coach", "athlete", "developer"],
-    required: true,
-  },
-  unitPreference: {
-    type: String,
-    enum: ["lbs", "kg"],
-    default: "lbs",
-  },
-  athletes: [
-    {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+const userSchema = new mongoose.Schema(
+  {
+    firstName: {
+      type: String,
+      minLength: 1,
+      maxLength: 50,
+      required: true,
+      trim: true,
     },
-  ],
-});
+    lastName: {
+      type: String,
+      minLength: 1,
+      maxLength: 50,
+      required: true,
+      trim: true,
+    },
+    username: {
+      type: String,
+      minLength: 5,
+      maxLength: 30,
+      required: true,
+      trim: true,
+      unique: true,
+    },
+    email: {
+      type: String,
+      minLength: 5,
+      maxLength: 255,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+      match:
+        /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/,
+    },
+    password: {
+      type: String,
+      required: true,
+      minLength: 8,
+      maxLength: 1024,
+    },
+    role: {
+      type: String,
+      enum: ["coach", "athlete", "developer"],
+      required: true,
+    },
+    unitPreference: {
+      type: String,
+      enum: ["lbs", "kg"],
+      default: "lbs",
+    },
+    athletes: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    confirmed: {
+      type: Boolean,
+      default: false,
+    },
+  },
+  { timestamps: true },
+);
 
 userSchema.methods.generateAuthToken = function () {
   const token = jwt.sign(
     { _id: this._id },
-    process.env.MOTIONSCOPE_JWT_PRIVATE_KEY
+    process.env.MOTIONSCOPE_JWT_PRIVATE_KEY,
   );
   return token;
 };
 
 const User = mongoose.model("User", userSchema);
+
+const refreshTokenSchema = new mongoose.Schema({
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  token: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  isValid: {
+    type: Boolean,
+    default: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+  expiresAt: {
+    type: Date,
+    required: true,
+    index: { expireAfterSeconds: 0 },
+  },
+});
+
+const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
 
 const validateUser = Joi.object({
   firstName: Joi.string().min(1).max(50).required().trim(),
@@ -87,9 +122,31 @@ const validateUser = Joi.object({
 });
 
 const validateUserUpdate = Joi.object({
-  name: Joi.string().min(1).max(100).optional(),
+  firstName: Joi.string().min(1).max(50).optional(),
+  lastName: Joi.string().min(1).max(50).optional(),
   email: Joi.string().email().optional(),
   unitPreference: Joi.string().valid("lbs", "kg").optional(),
 }).min(1);
 
-export { User, validateUser, validateUserUpdate };
+const validateRefreshToken = Joi.object({
+  userId: Joi.string().hex().length(24).required(),
+  token: Joi.string().required(),
+  isValid: Joi.boolean().default(true),
+  expiresAt: Joi.date().required(),
+});
+
+const validatePasswordReset = Joi.object({
+  userId: Joi.string().hex().length(24).required(),
+  token: Joi.string().required(),
+  used: Joi.boolean().default(false),
+  expiresAt: Joi.date().required(),
+});
+
+export {
+  User,
+  RefreshToken,
+  validateUser,
+  validateUserUpdate,
+  validateRefreshToken,
+  validatePasswordReset,
+};
