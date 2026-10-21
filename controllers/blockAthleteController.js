@@ -1,4 +1,5 @@
 import { Block } from "../model/block.js";
+import { setAthleteSchema } from "../validation/block.js";
 import mongoose from "mongoose";
 
 const updateAthleteSet = async (req, res) => {

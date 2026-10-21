@@ -1,4 +1,4 @@
-import Joi from "./common.js";
+import Joi, { toUpdateSchema } from "./common.js";
 import { weightClassEnum, liftNameEnum } from "../constants/competition.js";
 
 const validateAttempt = Joi.object({
@@ -44,4 +44,18 @@ const validateCompDay = Joi.object({
   lifts: Joi.array().items(validateLiftAttempts).required(),
 });
 
-export { validateAttempt, validateLiftAttempts, validateCompDay };
+// PATCH: same fields as validateCompDay, but every top-level field is optional
+const validateCompDayUpdate = toUpdateSchema(validateCompDay);
+
+// Athletes may only toggle actuallyAttempted on an attempt
+const validateAttemptUpdate = Joi.object({
+  actuallyAttempted: Joi.boolean().required(),
+});
+
+export {
+  validateAttempt,
+  validateLiftAttempts,
+  validateCompDay,
+  validateCompDayUpdate,
+  validateAttemptUpdate,
+};

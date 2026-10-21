@@ -1,5 +1,9 @@
 import { Block } from "../model/block.js";
-import { blockCoachSchema } from "../validation/block.js";
+import {
+  blockCoachSchema,
+  blockCoachUpdateSchema,
+} from "../validation/block.js";
+import { createBlockFromTemplateSchema } from "../validation/templateBlock.js";
 import { SavedBlockTemplate } from "../model/templateBlock.js";
 import mongoose from "mongoose";
 import { Program } from "../model/program.js";
@@ -120,10 +124,9 @@ const updateBlock = async (req, res) => {
     return res.status(400).json({ message: "Invalid block ID." });
   }
 
-  const { error, value } = blockCoachSchema.validate(req.body, {
+  const { error, value } = blockCoachUpdateSchema.validate(req.body, {
     abortEarly: false,
     allowUnknown: false,
-    presence: "optional",
   });
 
   if (error) {
@@ -229,7 +232,7 @@ const deleteBlock = async (req, res) => {
 };
 
 const createBlockFromTemplate = async (req, res) => {
-  const { error } = blockCoachSchema.validate(req.body);
+  const { error } = createBlockFromTemplateSchema.validate(req.body);
   if (error) {
     logger.warn(`Block validation failed: ${error.details[0].message}`);
     return res.status(400).send(error.details[0].message);

@@ -1,5 +1,9 @@
 import { CompDay } from "../model/compDay.js";
-import { validateCompDay } from "../validation/compDay.js";
+import {
+  validateCompDay,
+  validateCompDayUpdate,
+  validateAttemptUpdate,
+} from "../validation/compDay.js";
 import { Program } from "../model/program.js";
 import mongoose from "mongoose";
 
@@ -94,7 +98,7 @@ const updateCoachCompDay = async (req, res) => {
   const { compDayId } = req.params;
   const updates = req.body;
 
-  const { error: compDayError } = validateCompDay.validate(updates);
+  const { error: compDayError } = validateCompDayUpdate.validate(updates);
   if (compDayError)
     return res
       .status(400)
@@ -218,7 +222,9 @@ const updateAthleteCompDay = async (req, res) => {
   const { actuallyAttempted } = req.body;
 
   // Joi Validation
-  const { error: attemptError } = attemptSchema.validate({ actuallyAttempted });
+  const { error: attemptError } = validateAttemptUpdate.validate({
+    actuallyAttempted,
+  });
   if (attemptError) {
     return res
       .status(400)

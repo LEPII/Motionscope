@@ -1,4 +1,4 @@
-import Joi from "./common.js";
+import Joi, { toUpdateSchema } from "./common.js";
 import { primExercisesEnum, dayEnum } from "../constants/block.js";
 
 // Validation for coaches
@@ -131,8 +131,18 @@ const weeklyScheduleAthleteSchema = Joi.object({
   dailySchedule: Joi.array().items(dailyScheduleAthleteSchema).optional(),
 });
 
+// PATCH versions for coach updates
+const setCoachUpdateSchema = toUpdateSchema(setCoachSchema);
+const dailyScheduleCoachUpdateSchema = toUpdateSchema(dailyScheduleCoachSchema);
+const weeklyScheduleCoachUpdateSchema = toUpdateSchema(weeklyScheduleCoachSchema);
+const blockCoachUpdateSchema = toUpdateSchema(blockCoachSchema);
+
 export {
   setCoachSchema,
+  setCoachUpdateSchema,
+  dailyScheduleCoachUpdateSchema,
+  weeklyScheduleCoachUpdateSchema,
+  blockCoachUpdateSchema,
   exerciseEntryCoachSchema,
   dailyScheduleCoachSchema,
   weeklyScheduleCoachSchema,

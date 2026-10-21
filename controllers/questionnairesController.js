@@ -10,7 +10,7 @@ const getQuestionnaire = async (req, res) => {
 };
 
 const postQuestionnaire = async (req, res) => {
-  const { error } = validate(req.body);
+  const { error } = validate.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let question = new Questionnaire(req.body);
@@ -22,7 +22,7 @@ const postQuestionnaire = async (req, res) => {
 };
 
 const updateQuestionnaire = async (req, res) => {
-  const { error } = patchedValidate(req.body);
+  const { error } = patchedValidate.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const update = { ...req.body };

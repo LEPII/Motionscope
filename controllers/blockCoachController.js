@@ -1,9 +1,9 @@
 import { Block } from "../model/block.js";
 import {
   exerciseEntryCoachSchema,
-  weeklyScheduleCoachSchema,
-  dailyScheduleCoachSchema,
-  setCoachSchema,
+  weeklyScheduleCoachUpdateSchema,
+  dailyScheduleCoachUpdateSchema,
+  setCoachUpdateSchema,
 } from "../validation/block.js";
 import { cloneWeek, cloneDay, cloneExercise } from "../utils/clone.js";
 import { AthleteStats } from "../model/stats.js";
@@ -69,7 +69,16 @@ const postCoachExercise = async (req, res) => {
 
 const updateWeeklySchedule = async (req, res) => {
   const { blockId, weekNumber } = req.params;
-  const { value } = weeklyScheduleCoachSchema.validate(req.body);
+  const { error, value } = weeklyScheduleCoachUpdateSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json({
+      message: "Validation failed.",
+      details: error.details.map((d) => d.message),
+    });
+  }
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
   if (!block) return res.status(404).json({ message: "Block not found." });
@@ -110,7 +119,16 @@ const updateWeeklySchedule = async (req, res) => {
 
 const updateDailySchedule = async (req, res) => {
   const { blockId, weekNumber, dayIndex } = req.params;
-  const { value } = dailyScheduleCoachSchema.validate(req.body);
+  const { error, value } = dailyScheduleCoachUpdateSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json({
+      message: "Validation failed.",
+      details: error.details.map((d) => d.message),
+    });
+  }
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
   if (!block) return res.status(404).json({ message: "Block not found." });
@@ -148,7 +166,16 @@ const updateDailySchedule = async (req, res) => {
 
 const updateSet = async (req, res) => {
   const { blockId, weekNumber, dayIndex, exerciseId, setId } = req.params;
-  const { value } = setCoachSchema.validate(req.body);
+  const { error, value } = setCoachUpdateSchema.validate(req.body, {
+    abortEarly: false,
+  });
+
+  if (error) {
+    return res.status(400).json({
+      message: "Validation failed.",
+      details: error.details.map((d) => d.message),
+    });
+  }
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
   if (!block) return res.status(404).json({ message: "Block not found." });
