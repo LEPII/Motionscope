@@ -4,7 +4,7 @@ import { weeklyScheduleCoachSchema } from "./block.js";
 
 // Templates store the same weekly schedule shape as blocks (model/templateBlock.js reuses weeklyScheduleSchema)
 const savedBlockTemplateSchemaJoi = Joi.object({
-  coach: Joi.string().hex().length(24).required(),
+  coach: Joi.objectId().required(),
   templateName: Joi.string().min(1).max(50).required(),
   numberOfWeeks: Joi.number().integer().min(1).max(12).required(),
   days: Joi.array()
@@ -16,7 +16,7 @@ const savedBlockTemplateSchemaJoi = Joi.object({
 
 // Any field left out falls back to the template's value
 const createBlockFromTemplateSchema = Joi.object({
-  athlete: Joi.string().hex().length(24).required(),
+  athlete: Joi.objectId().required(),
   blockName: Joi.string().min(1).max(50).optional(),
   numberOfWeeks: Joi.number().integer().min(1).max(12).optional(),
   days: Joi.array()

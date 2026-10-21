@@ -30,11 +30,9 @@ const validateLiftAttempts = Joi.object({
 });
 
 const validateCompDay = Joi.object({
-  coach: Joi.string()
-    .regex(/^[0-9a-fA-F]{24}$/)
+  coach: Joi.objectId()
     .required(),
-  athlete: Joi.string()
-    .regex(/^[0-9a-fA-F]{24}$/)
+  athlete: Joi.objectId()
     .required(),
   competitionName: Joi.string().required(),
   date: Joi.date().required(),

@@ -1,7 +1,7 @@
 import Joi from "./common.js";
 
 const validateAthleteStats = Joi.object({
-  user: Joi.string().hex().length(24).required(),
+  user: Joi.objectId().required(),
   oneRepMaxes: Joi.object({
     squat: Joi.number().min(0).max(100000).optional(),
     bench: Joi.number().min(0).max(100000).optional(),

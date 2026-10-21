@@ -13,7 +13,7 @@ const validateUser = Joi.object({
   unitPreference: Joi.string()
     .valid(...unitPreferenceEnum)
     .default("lbs"),
-  athletes: Joi.array().items(Joi.string().hex().length(24)),
+  athletes: Joi.array().items(Joi.objectId()),
 });
 
 const validateUserUpdate = Joi.object({
@@ -26,14 +26,14 @@ const validateUserUpdate = Joi.object({
 }).min(1);
 
 const validateRefreshToken = Joi.object({
-  userId: Joi.string().hex().length(24).required(),
+  userId: Joi.objectId().required(),
   token: Joi.string().required(),
   isValid: Joi.boolean().default(true),
   expiresAt: Joi.date().required(),
 });
 
 const validatePasswordReset = Joi.object({
-  userId: Joi.string().hex().length(24).required(),
+  userId: Joi.objectId().required(),
   token: Joi.string().required(),
   used: Joi.boolean().default(false),
   expiresAt: Joi.date().required(),

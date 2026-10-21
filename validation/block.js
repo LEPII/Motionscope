@@ -34,7 +34,7 @@ const setCoachSchema = Joi.object({
 }, "Coach set restrictions");
 
 const exerciseEntryCoachSchema = Joi.object({
-  exerciseId: Joi.string().hex().length(24).required(),
+  exerciseId: Joi.objectId().required(),
   setsDetail: Joi.array().items(setCoachSchema).min(1).required().messages({
     "array.min": "At least one set must be provided for this exercise.",
     "any.required": "Sets detail is required.",
@@ -60,8 +60,8 @@ const weeklyScheduleCoachSchema = Joi.object({
 });
 
 const blockCoachSchema = Joi.object({
-  coach: Joi.string().hex().length(24).required(),
-  athlete: Joi.string().hex().length(24).required(),
+  coach: Joi.objectId().required(),
+  athlete: Joi.objectId().required(),
   isArchived: Joi.boolean().optional(),
   blockName: Joi.string().min(1).max(50).required(),
   numberOfWeeks: Joi.number().integer().min(1).max(12).required(),
@@ -119,7 +119,7 @@ const setAthleteSchema = Joi.object({
 }, "Set type restrictions");
 
 const exerciseEntryAthleteSchema = Joi.object({
-  exerciseId: Joi.string().hex().length(24).required(),
+  exerciseId: Joi.objectId().required(),
   setsDetail: Joi.array().items(setAthleteSchema).min(1).required(),
 });
 

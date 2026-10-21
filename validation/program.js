@@ -1,31 +1,29 @@
 import Joi from "./common.js";
 
 const validateProgram = Joi.object({
-  coachId: Joi.string()
-    .regex(/^[0-9a-fA-F]{24}$/)
+  coachId: Joi.objectId()
     .required()
     .messages({
-      "string.pattern.base": "Coach must be a valid ObjectId",
+      "string.pattern.name": "Coach must be a valid ObjectId",
       "any.required": "Coach is required",
     }),
-  athleteId: Joi.string()
-    .regex(/^[0-9a-fA-F]{24}$/)
+  athleteId: Joi.objectId()
     .required()
     .messages({
-      "string.pattern.base": "Athlete must be a valid ObjectId",
+      "string.pattern.name": "Athlete must be a valid ObjectId",
       "any.required": "Athlete is required",
     }),
   blocks: Joi.array()
-    .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
+    .items(Joi.objectId())
     .optional()
     .messages({
-      "string.pattern.base": "Each block in the array must be a valid ObjectId",
+      "string.pattern.name": "Each block in the array must be a valid ObjectId",
     }),
   compDays: Joi.array()
-    .items(Joi.string().pattern(/^[0-9a-fA-F]{24}$/))
+    .items(Joi.objectId())
     .optional()
     .messages({
-      "string.pattern.base":
+      "string.pattern.name":
         "Each compDay in the array must be a valid ObjectId",
     }),
   isArchived: Joi.boolean().optional(),
