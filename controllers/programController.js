@@ -1,4 +1,5 @@
-import { Program, validateProgram } from "../model/program.js";
+import { Program } from "../model/program.js";
+import { validateProgram } from "../validation/program.js";
 import { User } from "../model/user.js";
 import { Block } from "../model/block.js";
 import { CompDay } from "../model/compDay.js";

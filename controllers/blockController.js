@@ -1,4 +1,5 @@
-import { Block, blockCoachSchema } from "../model/block.js";
+import { Block } from "../model/block.js";
+import { blockCoachSchema } from "../validation/block.js";
 import { SavedBlockTemplate } from "../model/templateBlock.js";
 import mongoose from "mongoose";
 import { Program } from "../model/program.js";

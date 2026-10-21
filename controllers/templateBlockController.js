@@ -1,7 +1,5 @@
-import {
-  SavedBlockTemplate,
-  savedBlockTemplateSchemaJoi,
-} from "../model/templateBlock";
+import { SavedBlockTemplate } from "../model/templateBlock.js";
+import { savedBlockTemplateSchemaJoi } from "../validation/templateBlock.js";
 import { logger } from "winston";
 
 /// -- COACH'S ENDPOINTS --

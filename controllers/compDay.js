@@ -1,4 +1,5 @@
-import { CompDay, validateCompDay } from "../model/compDay.js";
+import { CompDay } from "../model/compDay.js";
+import { validateCompDay } from "../validation/compDay.js";
 import { Program } from "../model/program.js";
 import mongoose from "mongoose";
 

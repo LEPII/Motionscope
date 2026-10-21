@@ -1,4 +1,4 @@
-import { User, validateUser } from "../model/user.js";
+import { User } from "../model/user.js";
 import bcrypt from "bcrypt";
 import _ from "lodash";
 

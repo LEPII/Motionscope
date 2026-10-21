@@ -1,10 +1,10 @@
+import { Block } from "../model/block.js";
 import {
-  Block,
   exerciseEntryCoachSchema,
   weeklyScheduleCoachSchema,
   dailyScheduleCoachSchema,
   setCoachSchema,
-} from "../model/block.js";
+} from "../validation/block.js";
 import { cloneWeek, cloneDay, cloneExercise } from "../utils/clone.js";
 import { AthleteStats } from "../model/stats.js";
 import { populateBlockTargetLoads } from "../utils/trainingLoad.js";

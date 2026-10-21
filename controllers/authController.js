@@ -1,16 +1,8 @@
-import Joi from "joi";
 import bcrypt from "bcrypt";
-import { User, validateUser } from "../model/user.js";
+import { User } from "../model/user.js";
+import { validateUser } from "../validation/user.js";
+import { validateAuth } from "../validation/auth.js";
 import _ from "lodash";
-
-const validateAuth = (req) => {
-  const schema = {
-    email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
-    password: Joi.string().required().min(8).max(1024),
-  };
-
-  return Joi.validate(req, schema);
-};
 
 // logging in user
 

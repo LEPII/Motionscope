@@ -1,4 +1,5 @@
-import { Exercise, validateExercises } from "../model/exercise.js";
+import { Exercise } from "../model/exercise.js";
+import { validateExercises } from "../validation/exercise.js";
 
 const getSingleExercise = async (req, res) => {
   const exerciseId = req.params.id;

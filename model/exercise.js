@@ -1,5 +1,13 @@
-import Joi from "joi";
 import mongoose from "mongoose";
+import {
+  exerciseTypeEnum,
+  muscleGroupEnum,
+  movementPatternEnum,
+  loadTypeEquipmentEnum,
+  typeOfExerciseEnum,
+  unilateralBilateralEnum,
+  prCategoryEnum,
+} from "../constants/exercise.js";
 
 const exerciseSchema = new mongoose.Schema(
   {
@@ -13,7 +21,7 @@ const exerciseSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["preset", "custom"],
+      enum: exerciseTypeEnum,
       required: true,
       default: "custom",
     },
@@ -24,71 +32,28 @@ const exerciseSchema = new mongoose.Schema(
     description: { type: String, minLength: 10, maxLength: 1000 },
     muscleGroup: {
       type: [String],
-      enum: [
-        "Upper Chest",
-        "Mid Chest",
-        "Lower Chest",
-        "Upper Back",
-        "Lower Back",
-        "Lats",
-        "Traps",
-        "Rhomboids",
-        "Erector Spinae",
-        "Front Delts",
-        "Side Delts",
-        "Rear Delts",
-        "Biceps",
-        "Brachialis",
-        "Triceps Long Head",
-        "Triceps Lateral Head",
-        "Triceps Medial Head",
-        "Forearm Flexors",
-        "Forearm Extensors",
-        "Abdominals",
-        "Obliques",
-        "Transverse Abdominis",
-        "Quadriceps Rectus Femoris",
-        "Quadriceps Vastus Lateralis",
-        "Quadriceps Vastus Medialis",
-        "Quadriceps Vastus Intermedius",
-        "Hamstrings Biceps Femoris",
-        "Hamstrings Semitendinosus",
-        "Hamstrings Semimembranosus",
-        "Glutes Maximus",
-        "Glutes Medius",
-        "Glutes Minimus",
-        "Calves Gastrocnemius",
-        "Calves Soleus",
-      ],
+      enum: muscleGroupEnum,
     },
     movementPattern: {
       type: [String],
-      enum: [
-        "Push",
-        "Pull",
-        "Hinge",
-        "Squat",
-        "LungeStep",
-        "Rotation",
-        "AntiRotation",
-      ],
+      enum: movementPatternEnum,
     },
     loadTypeEquipment: {
       type: [String],
-      enum: ["Barbell", "Dumbbell", "Bodyweight", "Machine", "Cable Machine"],
+      enum: loadTypeEquipmentEnum,
     },
     typeOfExercise: {
       type: String,
-      enum: ["Compound", "Isolation"],
+      enum: typeOfExerciseEnum,
       required: true,
     },
     unilateralBilateral: {
       type: [String],
-      enum: ["Bilateral", "Unilateral"],
+      enum: unilateralBilateralEnum,
     },
     prCategory: {
       type: String,
-      enum: ["squat", "bench", "deadlift", null],
+      enum: [...prCategoryEnum, null],
     },
   },
   { timestamps: true }
@@ -103,79 +68,4 @@ exerciseSchema.index({ createdBy: 1 });
 
 const Exercise = mongoose.model("exercise", exerciseSchema);
 
-const validateExercises = Joi.object({
-  name: Joi.string().min(3).max(100).required(),
-  type: Joi.string().valid("preset", "custom").required().default("custom"),
-  createdBy: Joi.string(),
-  description: Joi.string().min(10).max(1000),
-  muscleGroup: Joi.array()
-    .items(
-      Joi.string().valid(
-        "Upper Chest",
-        "Mid Chest",
-        "Lower Chest",
-        "Upper Back",
-        "Lower Back",
-        "Lats",
-        "Traps",
-        "Rhomboids",
-        "Erector Spinae",
-        "Front Delts",
-        "Side Delts",
-        "Rear Delts",
-        "Biceps",
-        "Brachialis",
-        "Triceps Long Head",
-        "Triceps Lateral Head",
-        "Triceps Medial Head",
-        "Forearm Flexors",
-        "Forearm Extensors",
-        "Abdominals",
-        "Obliques",
-        "Transverse Abdominis",
-        "Quadriceps Rectus Femoris",
-        "Quadriceps Vastus Lateralis",
-        "Quadriceps Vastus Medialis",
-        "Quadriceps Vastus Intermedius",
-        "Hamstrings Biceps Femoris",
-        "Hamstrings Semitendinosus",
-        "Hamstrings Semimembranosus",
-        "Glutes Maximus",
-        "Glutes Medius",
-        "Glutes Minimus",
-        "Calves Gastrocnemius",
-        "Calves Soleus"
-      )
-    )
-    .optional(),
-  movementPattern: Joi.array()
-    .items(
-      Joi.string().valid(
-        "Push",
-        "Pull",
-        "HingeS",
-        "Squat",
-        "LungeStep",
-        "Rotation",
-        "AntiRotation"
-      )
-    )
-    .optional(),
-  loadTypeEquipment: Joi.array()
-    .items(
-      Joi.string().valid(
-        "Barbell",
-        "Dumbbell",
-        "Bodyweight",
-        "Machine",
-        "Cable Machine"
-      )
-    )
-    .optional(),
-  typeOfExercise: Joi.string().valid("Compound", "Isolation").required(),
-  unilateralBilateral: Joi.array()
-    .items(Joi.string().valid("Bilateral", "Unilateral"))
-    .optional(),
-});
-
-export { exerciseSchema, Exercise, validateExercises };
+export { exerciseSchema, Exercise };

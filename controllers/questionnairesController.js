@@ -1,8 +1,8 @@
+import { Questionnaire } from "../model/questionnaire.js";
 import {
-  Questionnaire,
-  validate,
-  patchedValidate,
-} from "../model/questionnaire.js";
+  validateQuestions as validate,
+  validatePatchedQuestions as patchedValidate,
+} from "../validation/questionnaire.js";
 
 const getQuestionnaire = async (req, res) => {
   const questionnaire = await Questionnaire.findById(req.params.id);
