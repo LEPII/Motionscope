@@ -5,6 +5,8 @@ import {
   updateExercise,
   deleteExercise,
 } from "../controllers/exercisesController.js";
+import validate from "../middleware/validate.js";
+import { exerciseSchema, exerciseUpdateSchema } from "../validation/exercise.js";
 import express from "express";
 const router = express.Router();
 
@@ -17,10 +19,10 @@ router.get("/:id", getSingleExercise);
 router.get("/", getExercises);
 
 // POST a Single Custom Exercise. Devs can only post Preset. Coaches can only post custom. 
-router.post("/", postExercise);
+router.post("/", validate(exerciseSchema), postExercise);
 
 // UPDATE a Single Custom Exercise
-router.patch("/:id", updateExercise);
+router.patch("/:id", validate(exerciseUpdateSchema, { noDefaults: true }), updateExercise);
 
 // DELETE a Single Custom Exercise
 router.delete("/:id", deleteExercise);

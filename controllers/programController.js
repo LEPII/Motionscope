@@ -1,4 +1,4 @@
-import { Program, validateProgram } from "../model/program.js";
+import { Program } from "../model/program.js";
 import { User } from "../model/user.js";
 import { Block } from "../model/block.js";
 import { CompDay } from "../model/compDay.js";
@@ -47,16 +47,10 @@ const getCurrentProgram = async (req, res) => {
 };
 
 const postProgram = async (req, res) => {
-  const { error, value: programData } = validateProgram.validate(req.body);
-  if (error) {
-    return res
-      .status(400)
-      .json({ message: "Invalid program data.", error: error.details });
-  }
 
   const coachId = req.user._id;
 
-  const { athleteId } = programData;
+  const { athleteId } = req.body;
 
   if (req.user.role !== "coach") {
     return res

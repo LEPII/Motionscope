@@ -1,4 +1,4 @@
-import { CompDay, validateCompDay } from "../model/compDay.js";
+import { CompDay } from "../model/compDay.js";
 import { Program } from "../model/program.js";
 import mongoose from "mongoose";
 
@@ -49,11 +49,6 @@ const getAllCompDaysForAthlete = async (req, res) => {
 };
 
 const postCompDay = async (req, res) => {
-  const { error, value: compDayData } = validateCompDay.validate(req.body);
-  if (error)
-    return res
-      .status(400)
-      .json({ message: "Invalid CompDay data", error: error.details });
 
   const { programId } = req.body;
   const session = await mongoose.startSession();
@@ -66,7 +61,7 @@ const postCompDay = async (req, res) => {
       return res.status(404).json({ message: "Program not found" });
     }
 
-    const newCompDay = new CompDay(compDayData);
+    const newCompDay = new CompDay(req.body);
     const savedCompDay = await newCompDay.save({ session });
 
     program.compDays.push(savedCompDay._id);
@@ -93,11 +88,6 @@ const updateCoachCompDay = async (req, res) => {
   const { compDayId } = req.params;
   const updates = req.body;
 
-  const { error: compDayError } = validateCompDay.validate(updates);
-  if (compDayError)
-    return res
-      .status(400)
-      .json({ message: "Invalid attempt data", error: compDayError.details });
 
   const compDay = await CompDay.findById(compDayId);
   if (!compDay) {
@@ -216,13 +206,6 @@ const updateAthleteCompDay = async (req, res) => {
   const { compDayId, liftName, attemptNumber, attemptIndex } = req.params;
   const { actuallyAttempted } = req.body;
 
-  // Joi Validation
-  const { error: attemptError } = attemptSchema.validate({ actuallyAttempted });
-  if (attemptError) {
-    return res
-      .status(400)
-      .json({ message: "Invalid attempt data", error: attemptError.details });
-  }
 
   const compDay = await CompDay.findById(compDayId);
   if (!compDay) {

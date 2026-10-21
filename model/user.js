@@ -1,11 +1,9 @@
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
-import Joi from "joi";
-import JoiObjectId from "joi-objectid";
 import mongoose from "mongoose";
+import { roleEnum, unitPreferenceEnum } from "../constants/user.js";
 
 dotenv.config();
-Joi.objectId = JoiObjectId(Joi);
 
 const userSchema = new mongoose.Schema(
   {
@@ -50,12 +48,12 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["coach", "athlete", "developer"],
+      enum: roleEnum,
       required: true,
     },
     unitPreference: {
       type: String,
-      enum: ["lbs", "kg"],
+      enum: unitPreferenceEnum,
       default: "lbs",
     },
     athletes: [
@@ -110,43 +108,4 @@ const refreshTokenSchema = new mongoose.Schema({
 
 const RefreshToken = mongoose.model("RefreshToken", refreshTokenSchema);
 
-const validateUser = Joi.object({
-  firstName: Joi.string().min(1).max(50).required().trim(),
-  lastName: Joi.string().min(1).max(50).required().trim(),
-  username: Joi.string().min(5).max(30).required().trim(),
-  email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
-  password: Joi.string().min(8).max(1024).required(),
-  role: Joi.string().valid("coach", "athlete", "developer").required(),
-  unitPreference: Joi.string().valid("lbs", "kg").default("lbs"),
-  athletes: Joi.array().items(Joi.string().hex().length(24)),
-});
-
-const validateUserUpdate = Joi.object({
-  firstName: Joi.string().min(1).max(50).optional(),
-  lastName: Joi.string().min(1).max(50).optional(),
-  email: Joi.string().email().optional(),
-  unitPreference: Joi.string().valid("lbs", "kg").optional(),
-}).min(1);
-
-const validateRefreshToken = Joi.object({
-  userId: Joi.string().hex().length(24).required(),
-  token: Joi.string().required(),
-  isValid: Joi.boolean().default(true),
-  expiresAt: Joi.date().required(),
-});
-
-const validatePasswordReset = Joi.object({
-  userId: Joi.string().hex().length(24).required(),
-  token: Joi.string().required(),
-  used: Joi.boolean().default(false),
-  expiresAt: Joi.date().required(),
-});
-
-export {
-  User,
-  RefreshToken,
-  validateUser,
-  validateUserUpdate,
-  validateRefreshToken,
-  validatePasswordReset,
-};
+export { User, RefreshToken };

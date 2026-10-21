@@ -1,5 +1,12 @@
-import Joi from "joi";
 import mongoose from "mongoose";
+import { dayEnum } from "../constants/block.js";
+import { weightClassEnum } from "../constants/competition.js";
+import {
+  genderEnum,
+  preferredMetricEnum,
+  rpeTrainingFamiliarityEnum,
+  deadliftStanceEnum,
+} from "../constants/questionnaire.js";
 
 const questionnaireSchema = new mongoose.Schema({
   birthday: {
@@ -14,12 +21,12 @@ const questionnaireSchema = new mongoose.Schema({
   },
   gender: {
     type: String,
-    enum: ["Male", "Female"],
+    enum: genderEnum,
     required: true,
   },
   preferredMetric: {
     type: String,
-    enum: ["Kilograms", "Pounds"],
+    enum: preferredMetricEnum,
     required: true,
   },
   height: {
@@ -34,22 +41,7 @@ const questionnaireSchema = new mongoose.Schema({
   },
   desiredWeightClass: {
     type: String,
-    enum: [
-      "44kg",
-      "48kg",
-      "52kg",
-      "56kg",
-      "60kg",
-      "67.5kg",
-      "75kg",
-      "82kg",
-      "90kg",
-      "100kg",
-      "110kg",
-      "125kg",
-      "140kg",
-      "140+kg",
-    ],
+    enum: weightClassEnum,
     required: true,
   },
   gymExperienceYears: {
@@ -129,12 +121,12 @@ const questionnaireSchema = new mongoose.Schema({
   },
   rpeTrainingFamiliarity: {
     type: String,
-    enum: ["Not Familiar", "Somewhat Familiar", "Proficient"],
+    enum: rpeTrainingFamiliarityEnum,
     required: true,
   },
   deadliftStance: {
     type: String,
-    enum: ["Conventional", "Sumo", "No Preference"],
+    enum: deadliftStanceEnum,
     required: true,
   },
   liftingGoals: {
@@ -144,15 +136,7 @@ const questionnaireSchema = new mongoose.Schema({
   },
   availableTrainingDays: {
     type: [String],
-    enum: [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
-    ],
+    enum: dayEnum,
     required: true,
   },
   availableEquipment: {
@@ -188,144 +172,4 @@ const questionnaireSchema = new mongoose.Schema({
 
 const Questionnaire = mongoose.model("Questionnaire", questionnaireSchema);
 
-function validateQuestions(questions) {
-  const schema = {
-    birthday: Joi.date()
-      .required()
-      .allow((value) => value <= Date.now(), "Birthday must be in the past"),
-    gender: Joi.string().valid("Male", "Female").required(),
-    preferredMetric: Joi.string().valid("Kilograms", "Pounds").required(),
-    height: Joi.number().required(),
-    currentBodyWeight: Joi.number().min(10).max(500).required(),
-    desiredWeightClass: Joi.string()
-      .valid("59kg", "66kg", "74kg", "83kg", "93kg", "105kg", "120kg", "120kg+")
-      .required(),
-    gymExperienceYears: Joi.number().min(0).max(100).required(),
-    powerliftingExperienceYears: Joi.number().min(0).max(100).required(),
-    competedInMeet: Joi.boolean().required(),
-    bestSquatTraining: Joi.number().default(null).min(1).max(5000).required(),
-    bestBenchTraining: Joi.number().default(null).min(1).max(5000).required(),
-    bestDeadliftTraining: Joi.number()
-      .default(null)
-      .min(1)
-      .max(5000)
-      .required(),
-    bestSquatCompetition: Joi.number().default(null).min(1).max(5000),
-    bestBenchCompetition: Joi.number().default(null).min(1).max(5000),
-    bestDeadliftCompetition: Joi.number().default(null).min(1).max(5000),
-    nextPlannedCompetitionDate: Joi.date()
-      .default(null)
-      .allow(
-        (value) => value >= Date.now(),
-        "Next planned competition date must be today or in the future."
-      ),
-    trainingHistory: Joi.string().max(2000).required(),
-    currentTrainingProgram: Joi.string().max(2000).required(),
-    rpeTrainingFamiliarity: Joi.string()
-      .valid("Not Familiar", "Somewhat Familiar", "Proficient")
-      .required(),
-    deadliftStance: Joi.string()
-      .valid("Conventional", "Sumo", "No Preference")
-      .required(),
-    liftingGoals: Joi.string().max(2000).required(),
-    availableTrainingDays: Joi.array()
-      .items(
-        Joi.string().valid(
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday"
-        )
-      )
-      .required(),
-    availableEquipment: Joi.string().max(2000).required(),
-    injuries: Joi.string().max(2000).optional(),
-    startDate: Joi.date()
-      .required()
-      .allow(
-        (value) => value >= Date.now(),
-        "Start date must be today or in the future."
-      ),
-    questionsOrConcerns: Joi.string().max(2000).optional(),
-    submitted: Joi.boolean().required(),
-  };
-
-  return Joi.validate(questions, schema);
-}
-
-function validatePatchedQuestions(patchedQuestions) {
-  const patchedSchema = {
-    _id: Joi.objectId().required(),
-    birthday: Joi.date()
-      .optional()
-      .allow((value) => value <= Date.now(), "Birthday must be in the past"),
-    gender: Joi.string().valid("Male", "Female").optional(),
-    preferredMetric: Joi.string().valid("kilograms", "pounds").optional(),
-    height: Joi.number().optional(),
-    currentBodyWeight: Joi.number().min(10).max(500).optional(),
-    desiredWeightClass: Joi.string()
-      .valid("59kg", "66kg", "74kg", "83kg", "93kg", "105kg", "120kg", "120kg+")
-      .optional(),
-    gymExperienceYears: Joi.number().min(0).max(100).optional(),
-    powerliftingExperienceYears: Joi.number().min(0).max(100).optional(),
-    competedInMeet: Joi.boolean().optional(),
-    bestSquatTraining: Joi.number().default(null).min(1).max(2000).optional(),
-    bestBenchTraining: Joi.number().default(null).min(1).max(2000).optional(),
-    bestDeadliftTraining: Joi.number()
-      .default(null)
-      .min(1)
-      .max(2000)
-      .optional(),
-    bestSquatCompetition: Joi.number().default(null).min(1).max(2000),
-    bestBenchCompetition: Joi.number().default(null).min(1).max(2000),
-    bestDeadliftCompetition: Joi.number().default(null).min(1).max(2000),
-    nextPlannedCompetitionDate: Joi.date()
-      .default(null)
-      .allow(
-        (value) => value >= Date.now(),
-        "Next planned competition date must be today or in the future."
-      ),
-    trainingHistory: Joi.string().max(2000).optional(),
-    currentTrainingProgram: Joi.string().max(2000).optional(),
-    rpeTrainingFamiliarity: Joi.string()
-      .valid("Not Familiar", "Somewhat Familiar", "Proficient")
-      .optional(),
-    deadliftStance: Joi.string()
-      .valid("Conventional", "Sumo", "No Preference")
-      .optional(),
-    liftingGoals: Joi.string().max(2000).optional(),
-    availableTrainingDays: Joi.array()
-      .items(
-        Joi.string().valid(
-          "Monday",
-          "Tuesday",
-          "Wednesday",
-          "Thursday",
-          "Friday",
-          "Saturday",
-          "Sunday"
-        )
-      )
-      .optional(),
-    availableEquipment: Joi.string().max(2000).optional(),
-    injuries: Joi.string().max(2000).optional(),
-    startDate: Joi.date()
-      .optional()
-      .allow(
-        (value) => value >= Date.now(),
-        "Start date must be today or in the future."
-      ),
-    questionsOrConcerns: Joi.string().max(2000).optional(),
-    submitted: Joi.boolean().optional(),
-  };
-  return Joi.validate(patchedQuestions, patchedSchema);
-}
-
-export {
-  Questionnaire,
-  validateQuestions as validate,
-  validatePatchedQuestions as patchedValidate,
-};
+export { Questionnaire };

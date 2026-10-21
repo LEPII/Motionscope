@@ -90,20 +90,9 @@ const postWarmUpAthleteSet = async (req, res) => {
     return res.status(400).json({ message: "Invalid block or exercise ID." });
   }
 
-  const { error, value } = setAthleteSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed",
-      details: error.details.map((d) => d.message),
-    });
-  }
 
   const newSet = {
-    ...value,
+    ...req.body,
     type: "warmup",
     createdBy: "athlete",
     createdAt: new Date(),

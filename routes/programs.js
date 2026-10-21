@@ -5,6 +5,8 @@ import {
   toggleProgramArchive,
   getCurrentProgramForAthlete,
 } from "../controllers/programController.js";
+import validate from "../middleware/validate.js";
+import { programSchema } from "../validation/program.js";
 import express from "express";
 const router = express.Router();
 
@@ -14,7 +16,7 @@ const router = express.Router();
 router.get("/:athleteId", getCurrentProgram);
 
 // Post a Program - Must have no more / no less than 1 athlete associated
-router.post("/", postProgram);
+router.post("/", validate(programSchema), postProgram);
 
 // Delete a Program / Athlete
 router.post("/:id", deleteProgram);
