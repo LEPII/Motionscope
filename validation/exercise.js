@@ -8,7 +8,7 @@ import {
   unilateralBilateralEnum,
 } from "../constants/exercise.js";
 
-const validateExercises = Joi.object({
+const exerciseSchema = Joi.object({
   name: Joi.string().min(3).max(100).required(),
   type: Joi.string()
     .valid(...exerciseTypeEnum)
@@ -33,4 +33,4 @@ const validateExercises = Joi.object({
     .optional(),
 });
 
-export { validateExercises };
+export { exerciseSchema };

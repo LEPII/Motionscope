@@ -3,7 +3,7 @@ import { dayEnum } from "../constants/block.js";
 import { weeklyScheduleCoachSchema } from "./block.js";
 
 // Templates store the same weekly schedule shape as blocks (model/templateBlock.js reuses weeklyScheduleSchema)
-const savedBlockTemplateSchemaJoi = Joi.object({
+const blockTemplateSchema = Joi.object({
   coach: Joi.objectId().required(),
   templateName: Joi.string().min(1).max(50).required(),
   numberOfWeeks: Joi.number().integer().min(1).max(12).required(),
@@ -28,4 +28,4 @@ const createBlockFromTemplateSchema = Joi.object({
   blockEndDate: Joi.date().iso().required(),
 });
 
-export { savedBlockTemplateSchemaJoi, createBlockFromTemplateSchema };
+export { blockTemplateSchema, createBlockFromTemplateSchema };

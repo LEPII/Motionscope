@@ -1,6 +1,6 @@
 import Joi from "./common.js";
 
-const validateAthleteStats = Joi.object({
+const athleteStatsSchema = Joi.object({
   user: Joi.objectId().required(),
   oneRepMaxes: Joi.object({
     squat: Joi.number().min(0).max(100000).optional(),
@@ -13,7 +13,7 @@ const validateAthleteStats = Joi.object({
     }),
 });
 
-const validateAthleteStatsUpdate = Joi.object({
+const athleteStatsUpdateSchema = Joi.object({
   oneRepMaxes: Joi.object({
     squat: Joi.number().min(0).max(100000).optional(),
     bench: Joi.number().min(0).max(100000).optional(),
@@ -21,4 +21,4 @@ const validateAthleteStatsUpdate = Joi.object({
   }).optional(),
 }).min(1);
 
-export { validateAthleteStats, validateAthleteStatsUpdate };
+export { athleteStatsSchema, athleteStatsUpdateSchema };

@@ -1,5 +1,5 @@
 import { Program } from "../model/program.js";
-import { validateProgram } from "../validation/program.js";
+import { programSchema } from "../validation/program.js";
 import { User } from "../model/user.js";
 import { Block } from "../model/block.js";
 import { CompDay } from "../model/compDay.js";
@@ -48,7 +48,7 @@ const getCurrentProgram = async (req, res) => {
 };
 
 const postProgram = async (req, res) => {
-  const { error, value: programData } = validateProgram.validate(req.body);
+  const { error, value: programData } = programSchema.validate(req.body);
   if (error) {
     return res
       .status(400)

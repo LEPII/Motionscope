@@ -1,7 +1,7 @@
 import Joi, { toUpdateSchema } from "./common.js";
 import { weightClassEnum, liftNameEnum } from "../constants/competition.js";
 
-const validateAttempt = Joi.object({
+const attemptSchema = Joi.object({
   set: Joi.number().required(),
   reps: Joi.number().required(),
   weight: Joi.number().required(),
@@ -9,7 +9,7 @@ const validateAttempt = Joi.object({
   record: Joi.boolean().required(),
 });
 
-const validateLiftAttempts = Joi.object({
+const liftAttemptsSchema = Joi.object({
   name: Joi.string()
     .valid(...liftNameEnum)
     .required(),
@@ -23,13 +23,13 @@ const validateLiftAttempts = Joi.object({
     )
     .required(),
   attempts: Joi.object({
-    first: validateAttempt.required(),
-    second: Joi.array().items(validateAttempt).required(),
-    third: Joi.array().items(validateAttempt).required(),
+    first: attemptSchema.required(),
+    second: Joi.array().items(attemptSchema).required(),
+    third: Joi.array().items(attemptSchema).required(),
   }).required(),
 });
 
-const validateCompDay = Joi.object({
+const compDaySchema = Joi.object({
   coach: Joi.objectId()
     .required(),
   athlete: Joi.objectId()
@@ -39,21 +39,21 @@ const validateCompDay = Joi.object({
   weightClass: Joi.string()
     .valid(...weightClassEnum)
     .required(),
-  lifts: Joi.array().items(validateLiftAttempts).required(),
+  lifts: Joi.array().items(liftAttemptsSchema).required(),
 });
 
-// PATCH: same fields as validateCompDay, but every top-level field is optional
-const validateCompDayUpdate = toUpdateSchema(validateCompDay);
+// PATCH: same fields as compDaySchema, but every top-level field is optional
+const compDayUpdateSchema = toUpdateSchema(compDaySchema);
 
 // Athletes may only toggle actuallyAttempted on an attempt
-const validateAttemptUpdate = Joi.object({
+const attemptUpdateSchema = Joi.object({
   actuallyAttempted: Joi.boolean().required(),
 });
 
 export {
-  validateAttempt,
-  validateLiftAttempts,
-  validateCompDay,
-  validateCompDayUpdate,
-  validateAttemptUpdate,
+  attemptSchema,
+  liftAttemptsSchema,
+  compDaySchema,
+  compDayUpdateSchema,
+  attemptUpdateSchema,
 };

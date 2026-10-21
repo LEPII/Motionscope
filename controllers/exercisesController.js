@@ -1,5 +1,5 @@
 import { Exercise } from "../model/exercise.js";
-import { validateExercises } from "../validation/exercise.js";
+import { exerciseSchema } from "../validation/exercise.js";
 
 const getSingleExercise = async (req, res) => {
   const exerciseId = req.params.id;
@@ -82,7 +82,7 @@ const getExercises = async (req, res) => {
 };
 
 const postExercise = async (req, res) => {
-  const { error } = validateExercises.validate(req.body);
+  const { error } = exerciseSchema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const {
@@ -176,7 +176,7 @@ const postExercise = async (req, res) => {
 };
 
 const updateExercise = async (req, res) => {
-  const { error } = validateExercises.validate(req.body);
+  const { error } = exerciseSchema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const exerciseId = req.params.id;

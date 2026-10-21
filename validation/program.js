@@ -1,6 +1,6 @@
 import Joi from "./common.js";
 
-const validateProgram = Joi.object({
+const programSchema = Joi.object({
   coachId: Joi.objectId()
     .required()
     .messages({
@@ -29,4 +29,4 @@ const validateProgram = Joi.object({
   isArchived: Joi.boolean().optional(),
 });
 
-export { validateProgram };
+export { programSchema };

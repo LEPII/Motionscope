@@ -1,13 +1,13 @@
 import bcrypt from "bcrypt";
 import { User } from "../model/user.js";
-import { validateUser } from "../validation/user.js";
-import { validateAuth } from "../validation/auth.js";
+import { userSchema } from "../validation/user.js";
+import { loginSchema } from "../validation/auth.js";
 import _ from "lodash";
 
 // logging in user
 
 const login = async (req, res) => {
-  const { error } = validateAuth.validate(req.body);
+  const { error } = loginSchema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await User.findOne({ email: req.body.email });
@@ -26,7 +26,7 @@ const getCurrentUser = async (req, res) => {
 };
 
 const registerUser = async (req, res) => {
-  const { error } = validateUser.validate(req.body);
+  const { error } = userSchema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let user = await User.findOne({ email: req.body.email });

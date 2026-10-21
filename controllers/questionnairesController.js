@@ -1,7 +1,7 @@
 import { Questionnaire } from "../model/questionnaire.js";
 import {
-  validateQuestions as validate,
-  validatePatchedQuestions as patchedValidate,
+  questionnaireSchema,
+  questionnaireUpdateSchema,
 } from "../validation/questionnaire.js";
 
 const getQuestionnaire = async (req, res) => {
@@ -10,7 +10,7 @@ const getQuestionnaire = async (req, res) => {
 };
 
 const postQuestionnaire = async (req, res) => {
-  const { error } = validate.validate(req.body);
+  const { error } = questionnaireSchema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   let question = new Questionnaire(req.body);
@@ -22,7 +22,7 @@ const postQuestionnaire = async (req, res) => {
 };
 
 const updateQuestionnaire = async (req, res) => {
-  const { error } = patchedValidate.validate(req.body);
+  const { error } = questionnaireUpdateSchema.validate(req.body);
   if (error) return res.status(400).send(error.details[0].message);
 
   const update = { ...req.body };

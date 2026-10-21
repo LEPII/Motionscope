@@ -1,11 +1,11 @@
 import { SavedBlockTemplate } from "../model/templateBlock.js";
-import { savedBlockTemplateSchemaJoi } from "../validation/templateBlock.js";
+import { blockTemplateSchema } from "../validation/templateBlock.js";
 import { logger } from "winston";
 
 /// -- COACH'S ENDPOINTS --
 
 const createTemplate = async (req, res) => {
-  const { error } = savedBlockTemplateSchemaJoi.validate(req.body);
+  const { error } = blockTemplateSchema.validate(req.body);
   if (error) {
     logger.warn(
       `Validation failed for block template: ${error.details[0].message}`

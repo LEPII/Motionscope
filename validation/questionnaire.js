@@ -8,7 +8,7 @@ import {
   deadliftStanceEnum,
 } from "../constants/questionnaire.js";
 
-const validateQuestions = Joi.object({
+const questionnaireSchema = Joi.object({
   birthday: Joi.date()
     .required()
     .max("now"),
@@ -59,7 +59,7 @@ const validateQuestions = Joi.object({
   submitted: Joi.boolean().required(),
 });
 
-const validatePatchedQuestions = Joi.object({
+const questionnaireUpdateSchema = Joi.object({
   _id: Joi.objectId().required(),
   birthday: Joi.date()
     .optional()
@@ -111,4 +111,4 @@ const validatePatchedQuestions = Joi.object({
   submitted: Joi.boolean().optional(),
 });
 
-export { validateQuestions, validatePatchedQuestions };
+export { questionnaireSchema, questionnaireUpdateSchema };
