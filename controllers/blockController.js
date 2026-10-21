@@ -1,9 +1,4 @@
 import { Block } from "../model/block.js";
-import {
-  blockCoachSchema,
-  blockCoachUpdateSchema,
-} from "../validation/block.js";
-import { createBlockFromTemplateSchema } from "../validation/templateBlock.js";
 import { SavedBlockTemplate } from "../model/templateBlock.js";
 import mongoose from "mongoose";
 import { Program } from "../model/program.js";
@@ -26,19 +21,8 @@ const postBlock = async (req, res) => {
   const { athleteId } = req.params;
   const coachId = req.user._id;
 
-  const { error, value } = blockCoachSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
 
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed",
-      details: error.details.map((d) => d.message),
-    });
-  }
-
-  const blockData = { ...value, coach: coachId, athlete: athleteId };
+  const blockData = { ...req.body, coach: coachId, athlete: athleteId };
   const { programId } = req.body;
 
   const session = await mongoose.startSession();
@@ -124,17 +108,6 @@ const updateBlock = async (req, res) => {
     return res.status(400).json({ message: "Invalid block ID." });
   }
 
-  const { error, value } = blockCoachUpdateSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed",
-      details: error.details.map((d) => d.message),
-    });
-  }
 
   const block = await Block.findOne({ _id: blockId, coach: coachId });
   if (!block) {
@@ -143,6 +116,7 @@ const updateBlock = async (req, res) => {
       .json({ message: "Block not found or access denied." });
   }
 
+  const value = req.body;
   Object.keys(value).forEach((key) => {
     block[key] = value[key];
   });
@@ -232,11 +206,6 @@ const deleteBlock = async (req, res) => {
 };
 
 const createBlockFromTemplate = async (req, res) => {
-  const { error } = createBlockFromTemplateSchema.validate(req.body);
-  if (error) {
-    logger.warn(`Block validation failed: ${error.details[0].message}`);
-    return res.status(400).send(error.details[0].message);
-  }
 
   const { templateId } = req.params;
   const { coachId } = req.user._id;

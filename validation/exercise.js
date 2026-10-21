@@ -1,4 +1,4 @@
-import Joi from "./common.js";
+import Joi, { toUpdateSchema } from "./common.js";
 import {
   exerciseTypeEnum,
   muscleGroupEnum,
@@ -33,4 +33,6 @@ const exerciseSchema = Joi.object({
     .optional(),
 });
 
-export { exerciseSchema };
+const exerciseUpdateSchema = toUpdateSchema(exerciseSchema);
+
+export { exerciseSchema, exerciseUpdateSchema };

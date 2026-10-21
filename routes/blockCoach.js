@@ -10,24 +10,41 @@ import {
   deleteDailySchedule,
   deleteCoachExercise,
 } from "../controllers/blockCoachController.js";
+import validate from "../middleware/validate.js";
+import {
+  exerciseEntryCoachSchema,
+  weeklyScheduleCoachUpdateSchema,
+  dailyScheduleCoachUpdateSchema,
+  setCoachUpdateSchema,
+} from "../validation/block.js";
 import express from "express";
 const router = express.Router();
 
 // Post a new exercise to the daily schedule
 router.post(
   "/:blockId/weeks/:weekNumber/days/:dayIndex/exercises",
+  validate(exerciseEntryCoachSchema),
   postCoachExercise
 );
 
 // Update a specific week (e.g., change weekStartDate or replace all daily schedules).
-router.patch("/:blockId/week/:weekNumber", updateWeeklySchedule);
+router.patch(
+  "/:blockId/week/:weekNumber",
+  validate(weeklyScheduleCoachUpdateSchema, { noDefaults: true }),
+  updateWeeklySchedule
+);
 
 // Update a single day’s exercises within a specific week.
-router.patch("/:blockId/week/:weekNumber/day/:dayIndex", updateDailySchedule);
+router.patch(
+  "/:blockId/week/:weekNumber/day/:dayIndex",
+  validate(dailyScheduleCoachUpdateSchema, { noDefaults: true }),
+  updateDailySchedule
+);
 
 // Update individual sets (like reps, prescribedLoad, actualLoad, etc.)
 router.patch(
   "/:blockId/week/:weekNumber/day/:dayIndex/exercise/:exerciseId/set/:setId",
+  validate(setCoachUpdateSchema, { noDefaults: true }),
   updateSet
 );
 

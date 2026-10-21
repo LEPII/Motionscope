@@ -1,8 +1,4 @@
 import { Questionnaire } from "../model/questionnaire.js";
-import {
-  questionnaireSchema,
-  questionnaireUpdateSchema,
-} from "../validation/questionnaire.js";
 
 const getQuestionnaire = async (req, res) => {
   const questionnaire = await Questionnaire.findById(req.params.id);
@@ -10,8 +6,6 @@ const getQuestionnaire = async (req, res) => {
 };
 
 const postQuestionnaire = async (req, res) => {
-  const { error } = questionnaireSchema.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
 
   let question = new Questionnaire(req.body);
   question.submitted = true;
@@ -22,8 +16,6 @@ const postQuestionnaire = async (req, res) => {
 };
 
 const updateQuestionnaire = async (req, res) => {
-  const { error } = questionnaireUpdateSchema.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
 
   const update = { ...req.body };
   delete update.submitted;

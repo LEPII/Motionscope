@@ -1,4 +1,7 @@
 import blockValidation from "../middleware/blockMiddleware.js";
+import validate from "../middleware/validate.js";
+import { blockCoachSchema, blockCoachUpdateSchema } from "../validation/block.js";
+import { createBlockFromTemplateSchema } from "../validation/templateBlock.js";
 import {
   getSingleBlock,
   getAllBlocks,
@@ -22,10 +25,20 @@ router.get("/:athleteId/:blockId", getSingleBlock);
 router.get("/:athleteId", getAllBlocks);
 
 // Post a Block to a Specific Athlete
-router.post("/:athleteId", blockValidation, postBlock);
+router.post(
+  "/:athleteId",
+  validate(blockCoachSchema),
+  blockValidation,
+  postBlock
+);
 
 // Update a Block from a Specific Athlete
-router.patch("/:athleteId/:blockId", blockValidation, updateBlock);
+router.patch(
+  "/:athleteId/:blockId",
+  validate(blockCoachUpdateSchema, { noDefaults: true }),
+  blockValidation,
+  updateBlock
+);
 
 // Archive a Block from a Specific Athlete
 router.patch("/block/:blockId/archive", toggleBlockArchive);
@@ -34,7 +47,11 @@ router.patch("/block/:blockId/archive", toggleBlockArchive);
 router.delete("/:athleteId/:blockId", deleteBlock);
 
 // Create a real Block from template
-router.post("/use/:templateId", createBlockFromTemplate);
+router.post(
+  "/use/:templateId",
+  validate(createBlockFromTemplateSchema),
+  createBlockFromTemplate
+);
 
 /// -- ATHLETE'S ENDPOINTS --
 

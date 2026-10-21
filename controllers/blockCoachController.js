@@ -1,10 +1,4 @@
 import { Block } from "../model/block.js";
-import {
-  exerciseEntryCoachSchema,
-  weeklyScheduleCoachUpdateSchema,
-  dailyScheduleCoachUpdateSchema,
-  setCoachUpdateSchema,
-} from "../validation/block.js";
 import { cloneWeek, cloneDay, cloneExercise } from "../utils/clone.js";
 import { AthleteStats } from "../model/stats.js";
 import { populateBlockTargetLoads } from "../utils/trainingLoad.js";
@@ -22,17 +16,6 @@ const postCoachExercise = async (req, res) => {
     return res.status(400).json({ message: "Invalid parameters." });
   }
 
-  const { error, value } = exerciseEntryCoachSchema.validate(req.body, {
-    abortEarly: false,
-    allowUnknown: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      details: error.details.map((d) => d.message),
-    });
-  }
 
   const block = await Block.findOne({ _id: blockId, coach: coachId });
   if (!block) {
@@ -53,7 +36,7 @@ const postCoachExercise = async (req, res) => {
       .json({ message: "Invalid week or day index in block schedule." });
   }
 
-  block.blockSchedule[weekIndex].dailySchedule[dayIdx].exercises.push(value);
+  block.blockSchedule[weekIndex].dailySchedule[dayIdx].exercises.push(req.body);
 
   const updatedBlock = await block.save();
 
@@ -69,16 +52,6 @@ const postCoachExercise = async (req, res) => {
 
 const updateWeeklySchedule = async (req, res) => {
   const { blockId, weekNumber } = req.params;
-  const { error, value } = weeklyScheduleCoachUpdateSchema.validate(req.body, {
-    abortEarly: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      details: error.details.map((d) => d.message),
-    });
-  }
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
   if (!block) return res.status(404).json({ message: "Block not found." });
@@ -90,8 +63,8 @@ const updateWeeklySchedule = async (req, res) => {
     return res.status(404).json({ message: "Week not found." });
 
   const requiresRecalc =
-    value.dailySchedule &&
-    value.dailySchedule.some((day) =>
+    req.body.dailySchedule &&
+    req.body.dailySchedule.some((day) =>
       day.exercises?.some((ex) =>
         ex.setsDetail?.some(
           (set) =>
@@ -105,7 +78,7 @@ const updateWeeklySchedule = async (req, res) => {
 
   block.blockSchedule[weekIndex] = {
     ...block.blockSchedule[weekIndex],
-    ...value,
+    ...req.body,
   };
 
   if (requiresRecalc) {
@@ -119,16 +92,6 @@ const updateWeeklySchedule = async (req, res) => {
 
 const updateDailySchedule = async (req, res) => {
   const { blockId, weekNumber, dayIndex } = req.params;
-  const { error, value } = dailyScheduleCoachUpdateSchema.validate(req.body, {
-    abortEarly: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      details: error.details.map((d) => d.message),
-    });
-  }
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
   if (!block) return res.status(404).json({ message: "Block not found." });
@@ -142,8 +105,8 @@ const updateDailySchedule = async (req, res) => {
   if (!day) return res.status(404).json({ message: "Day not found." });
 
   const requiresRecalc =
-    value.exercises &&
-    value.exercises.some((ex) =>
+    req.body.exercises &&
+    req.body.exercises.some((ex) =>
       ex.setsDetail?.some(
         (set) =>
           set.prescribedLoad != null ||
@@ -153,7 +116,7 @@ const updateDailySchedule = async (req, res) => {
       )
     );
 
-  week.dailySchedule[dayIndex] = { ...day, ...value };
+  week.dailySchedule[dayIndex] = { ...day, ...req.body };
 
   if (requiresRecalc) {
     const athleteStats = await AthleteStats.findOne({ user: block.athlete });
@@ -166,16 +129,6 @@ const updateDailySchedule = async (req, res) => {
 
 const updateSet = async (req, res) => {
   const { blockId, weekNumber, dayIndex, exerciseId, setId } = req.params;
-  const { error, value } = setCoachUpdateSchema.validate(req.body, {
-    abortEarly: false,
-  });
-
-  if (error) {
-    return res.status(400).json({
-      message: "Validation failed.",
-      details: error.details.map((d) => d.message),
-    });
-  }
 
   const block = await Block.findOne({ _id: blockId, coach: req.user._id });
   if (!block) return res.status(404).json({ message: "Block not found." });
@@ -197,7 +150,7 @@ const updateSet = async (req, res) => {
   const set = exercise.setsDetail.id(setId);
   if (!set) return res.status(404).json({ message: "Set not found." });
 
-  Object.assign(set, value);
+  Object.assign(set, req.body);
 
   const athleteStats = await AthleteStats.findOne({ user: block.athlete });
   await populateBlockTargetLoads(block, athleteStats);

@@ -1,5 +1,4 @@
 import { Exercise } from "../model/exercise.js";
-import { exerciseSchema } from "../validation/exercise.js";
 
 const getSingleExercise = async (req, res) => {
   const exerciseId = req.params.id;
@@ -82,8 +81,6 @@ const getExercises = async (req, res) => {
 };
 
 const postExercise = async (req, res) => {
-  const { error } = exerciseSchema.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
 
   const {
     name,
@@ -176,8 +173,6 @@ const postExercise = async (req, res) => {
 };
 
 const updateExercise = async (req, res) => {
-  const { error } = exerciseSchema.validate(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
 
   const exerciseId = req.params.id;
   const user = req.user;
