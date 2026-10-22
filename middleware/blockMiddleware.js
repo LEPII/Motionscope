@@ -1,5 +1,3 @@
-// Cross-field checks Joi can't express on its own. Runs after validate(), so field types are already checked.
-// On PATCH, any of these fields may be missing, so each check only runs when its fields are present.
 export default (req, res, next) => {
   const { numberOfWeeks, days, blockSchedule } = req.body;
 
