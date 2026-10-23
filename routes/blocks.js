@@ -1,4 +1,3 @@
-import blockValidation from "../middleware/blockMiddleware.js";
 import validate from "../middleware/validate.js";
 import { blockCoachSchema, blockCoachUpdateSchema } from "../validation/block.js";
 import { createBlockFromTemplateSchema } from "../validation/templateBlock.js";
@@ -28,7 +27,6 @@ router.get("/:athleteId", getAllBlocks);
 router.post(
   "/:athleteId",
   validate(blockCoachSchema),
-  blockValidation,
   postBlock
 );
 
@@ -36,7 +34,6 @@ router.post(
 router.patch(
   "/:athleteId/:blockId",
   validate(blockCoachUpdateSchema, { noDefaults: true }),
-  blockValidation,
   updateBlock
 );
 

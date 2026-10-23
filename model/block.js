@@ -205,7 +205,7 @@ blockSchema.pre("save", async function (next) {
         blockEndDate: { $gte: this.blockStartDate },
       },
     ],
-  });
+  }).session(this.$session());
   if (overlappingBlock) {
     const err = new Error(
       `Athlete already has a block overlapping this period: ${overlappingBlock.blockName}`
