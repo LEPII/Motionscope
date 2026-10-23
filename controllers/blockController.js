@@ -56,7 +56,6 @@ const postBlock = async (req, res) => {
     });
   } catch (err) {
     await session.abortTransaction();
-    // error middleware picks the status (400 validation, 409 overlap, 500 otherwise)
     throw err;
   } finally {
     await session.endSession();

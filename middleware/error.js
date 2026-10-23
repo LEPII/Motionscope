@@ -26,8 +26,6 @@ export default (err, req, res, next) => {
     });
   }
 
-  // Errors that already carry a client status, e.g. malformed JSON from express.json()
-  // or the overlapping-block error from model/block.js
   const status = err.status || err.statusCode;
   if (status >= 400 && status < 500) {
     logger.warn(err.message);
