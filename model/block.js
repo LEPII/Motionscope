@@ -210,6 +210,7 @@ blockSchema.pre("save", async function (next) {
     const err = new Error(
       `Athlete already has a block overlapping this period: ${overlappingBlock.blockName}`
     );
+    err.status = 409;
     return next(err);
   }
 
