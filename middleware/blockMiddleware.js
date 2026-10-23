@@ -1,15 +1,31 @@
 export default (req, res, next) => {
-  const { numberOfWeeks, days, weeklySchedule } = req.body;
+  const { numberOfWeeks, days, blockSchedule } = req.body;
 
-  if (numberOfWeeks !== weeklySchedule.length) {
-    return res.status(400).json({ error: "Invalid number of weeks." });
+  if (!blockSchedule) return next();
+
+  const errors = [];
+
+  if (numberOfWeeks !== undefined && numberOfWeeks !== blockSchedule.length) {
+    errors.push(
+      `'blockSchedule' must have ${numberOfWeeks} weeks to match 'numberOfWeeks'.`
+    );
   }
-  for (const week of weeklySchedule) {
-    if (days.length !== week.dailySchedule.length) {
-      return res
-        .status(400)
-        .json({ error: "Invalid number of daily schedules" });
-    }
+
+  if (
+    days &&
+    blockSchedule.some(
+      (week) => week.dailySchedule && week.dailySchedule.length !== days.length
+    )
+  ) {
+    errors.push(
+      `Each week's 'dailySchedule' must have ${days.length} days to match 'days'.`
+    );
+  }
+
+  if (errors.length) {
+    return res
+      .status(400)
+      .json({ message: "Validation failed.", details: errors });
   }
 
   next();
