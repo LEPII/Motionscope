@@ -50,5 +50,4 @@ export {
   getTemplates,
   getTemplateById,
   deleteTemplate,
-  createBlockFromTemplate,
 };
