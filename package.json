@@ -7,12 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "nodemon index.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "bcrypt": "^5.1.1",
+    "bcrypt": "^6.0.0",
     "config": "^3.3.12",
     "dotenv": "^16.4.5",
     "express": "^4.19.2",
@@ -23,7 +19,14 @@
     "lodash": "^4.17.21",
     "mongodb": "^6.8.0",
     "mongoose": "^8.5.4",
-    "nodemon": "^3.1.10",
     "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
+  "overrides": {
+    "nodemon": {
+      "minimatch": "^11.0.1"
+    }
   }
 }
