@@ -1,0 +1,74 @@
+// TEMPLATE (scaffold-api) — delete this header when generating.
+// Placeholders: {{resource}} {{Resource}} {{resources}} {{Resources}}. Written for variant A.
+// Output path: routes/{{resources}}.ts — mount as app.use("/api/{{resources}}", ...) in routes/routes.js.
+//
+// Chain order is the security policy: auth (401) -> authorize* (403) -> validate (400) -> handler.
+
+import express from "express";
+import auth from "../middleware/auth.js";
+import {
+  authorizeAthlete,
+  authorizeCoachForAthleteResource,
+} from "../middleware/authorization.js";
+import validate from "../middleware/validate.js";
+import { {{resource}}Schema, {{resource}}UpdateSchema } from "../validation/{{resource}}.js";
+import {
+  getAll{{Resources}},
+  getSingle{{Resource}},
+  post{{Resource}},
+  update{{Resource}},
+  delete{{Resource}},
+  getAllAthlete{{Resources}},
+  getAthlete{{Resource}},
+} from "../controllers/{{resource}}Controller.js";
+
+const router = express.Router();
+
+/// -- ATHLETE'S ENDPOINTS --  (literal paths first, or /:athleteId would swallow "/athletes")
+
+// Get all of the logged-in athlete's {{Resources}}
+router.get("/athletes", auth, authorizeAthlete, getAllAthlete{{Resources}});
+
+// Get one of the logged-in athlete's {{Resources}}
+router.get("/athletes/:{{resource}}Id", auth, authorizeAthlete, getAthlete{{Resource}});
+
+// -- COACH'S ENDPOINTS --  (authorizeCoachForAthleteResource: coach role + athlete on roster)
+
+// Get all {{Resources}} for a specific Athlete
+router.get("/:athleteId", auth, authorizeCoachForAthleteResource, getAll{{Resources}});
+
+// Post a {{Resource}} to a specific Athlete
+router.post(
+  "/:athleteId",
+  auth,
+  authorizeCoachForAthleteResource,
+  validate({{resource}}Schema),
+  post{{Resource}},
+);
+
+// Get a single {{Resource}} from a specific Athlete
+router.get(
+  "/:athleteId/:{{resource}}Id",
+  auth,
+  authorizeCoachForAthleteResource,
+  getSingle{{Resource}},
+);
+
+// Update a {{Resource}} from a specific Athlete
+router.patch(
+  "/:athleteId/:{{resource}}Id",
+  auth,
+  authorizeCoachForAthleteResource,
+  validate({{resource}}UpdateSchema, { noDefaults: true }),
+  update{{Resource}},
+);
+
+// Delete a {{Resource}} from a specific Athlete
+router.delete(
+  "/:athleteId/:{{resource}}Id",
+  auth,
+  authorizeCoachForAthleteResource,
+  delete{{Resource}},
+);
+
+export default router;

@@ -1,0 +1,178 @@
+// TEMPLATE (scaffold-analytics-query) — delete this header when generating.
+// Placeholders: {{metric}} (camelCase, e.g. weeklyLiftSummary), {{Metric}} (PascalCase).
+// Three pieces: (1) pure pipeline builder, (2) controller handler, (3) route lines.
+// The $group / $project in (1) are the "weekly tonnage + best e1RM" recipe; swap per SKILL.md Step 4.
+
+// ═════════════════════════════════════════════════════════════════════════════
+// (1) utils/analytics/{{metric}}.ts — pure: params in, PipelineStage[] out. No DB access.
+// ═════════════════════════════════════════════════════════════════════════════
+
+import mongoose, { type PipelineStage } from "mongoose";
+import { Exercise } from "../../model/exercise.js";
+import { dayEnum } from "../../constants/block.js";
+
+type CompLift = "squat" | "bench" | "deadlift";
+
+export type {{Metric}}Params = {
+  athleteId: string;
+  coachId?: string; // set for coach requests -> only blocks this coach wrote
+  from?: Date;
+  to?: Date;
+  lift?: CompLift; // omit -> all competition lifts
+};
+
+export const {{metric}}Pipeline = ({
+  athleteId,
+  coachId,
+  from,
+  to,
+  lift,
+}: {{Metric}}Params): PipelineStage[] => {
+  // aggregate() doesn't cast like find(): ids must be ObjectIds or nothing matches.
+  const blockMatch: Record<string, unknown> = {
+    athlete: new mongoose.Types.ObjectId(athleteId),
+    isArchived: false,
+  };
+  if (coachId) blockMatch.coach = new mongoose.Types.ObjectId(coachId);
+  // Blocks overlapping [from, to]
+  if (from) blockMatch.blockEndDate = { $gte: from };
+  if (to) blockMatch.blockStartDate = { $lte: to };
+
+  const setDateMatch: Record<string, unknown> = {};
+  if (from) setDateMatch.$gte = from;
+  if (to) setDateMatch.$lte = to;
+
+  return [
+    // 1. Scope + index use. Ownership lives here.
+    { $match: blockMatch },
+    // 2. Shrink docs before they multiply.
+    { $project: { days: 1, blockSchedule: 1 } },
+    // 3. One doc per set. dayIndex links dailySchedule[i] to days[i].
+    { $unwind: "$blockSchedule" },
+    { $unwind: { path: "$blockSchedule.dailySchedule", includeArrayIndex: "dayIndex" } },
+    { $unwind: "$blockSchedule.dailySchedule.exercises" },
+    { $unwind: "$blockSchedule.dailySchedule.exercises.setsDetail" },
+    // 4. Flatten. Date = weekStartDate (Sunday) + position of the day name in the Sunday-first dayEnum.
+    {
+      $project: {
+        _id: 0,
+        blockId: "$_id",
+        date: {
+          $dateAdd: {
+            startDate: "$blockSchedule.weekStartDate",
+            unit: "day",
+            amount: {
+              $indexOfArray: [[...dayEnum], { $arrayElemAt: ["$days", "$dayIndex"] }],
+            },
+          },
+        },
+        exercise: "$blockSchedule.dailySchedule.exercises.exerciseId",
+        set: "$blockSchedule.dailySchedule.exercises.setsDetail",
+      },
+    },
+    // 5. Performed, non-warmup sets only (coach sets without actuals are the plan, not the log).
+    {
+      $match: {
+        "set.type": { $ne: "warmup" },
+        "set.actualLoad": { $gt: 0 },
+        "set.actualReps": { $gt: 0 },
+        ...(from || to ? { date: setDateMatch } : {}),
+      },
+    },
+    // 6. Lift identity. Collection name from the model, never hard-coded.
+    {
+      $lookup: {
+        from: Exercise.collection.name,
+        localField: "exercise",
+        foreignField: "_id",
+        pipeline: [{ $project: { name: 1, prCategory: 1 } }],
+        as: "exercise",
+      },
+    },
+    { $unwind: "$exercise" },
+    { $match: { "exercise.prCategory": lift ?? { $in: ["squat", "bench", "deadlift"] } } },
+    // 7. Group to the grain. weekNumber restarts per block, so group on the calendar week instead.
+    {
+      $group: {
+        _id: {
+          week: { $dateTrunc: { date: "$date", unit: "week", startOfWeek: "sunday" } },
+          lift: "$exercise.prCategory",
+        },
+        tonnage: { $sum: { $multiply: ["$set.actualLoad", "$set.actualReps"] } },
+        // Epley e1RM: load × (1 + reps / 30). Reasonable for reps ≤ 10.
+        bestE1rm: {
+          $max: {
+            $multiply: ["$set.actualLoad", { $add: [1, { $divide: ["$set.actualReps", 30] }] }],
+          },
+        },
+        sets: { $sum: 1 },
+        avgRpe: { $avg: "$set.actualRPE" },
+      },
+    },
+    {
+      $project: {
+        _id: 0,
+        week: "$_id.week",
+        lift: "$_id.lift",
+        tonnage: 1,
+        bestE1rm: { $round: ["$bestE1rm", 1] },
+        sets: 1,
+        avgRpe: { $round: ["$avgRpe", 1] },
+      },
+    },
+    { $sort: { week: 1, lift: 1 } },
+  ];
+};
+
+// ═════════════════════════════════════════════════════════════════════════════
+// (2) controllers/analyticsController.ts — validate query, scope, run, respond.
+// ═════════════════════════════════════════════════════════════════════════════
+
+import type { Request, Response } from "express";
+import Joi from "../validation/common.js";
+import { Block } from "../model/block.js";
+import { {{metric}}Pipeline } from "../utils/analytics/{{metric}}.js";
+
+// validate.js only checks req.body, so query params are validated here.
+const {{metric}}QuerySchema = Joi.object({
+  from: Joi.date().iso(),
+  to: Joi.date().iso().min(Joi.ref("from")),
+  lift: Joi.string().valid("squat", "bench", "deadlift"),
+});
+
+const run{{Metric}} = async (req: Request, res: Response, athleteId: string, coachId?: string) => {
+  const { error, value } = {{metric}}QuerySchema.validate(req.query, { abortEarly: false });
+  if (error) {
+    return res
+      .status(400)
+      .json({ message: "Validation failed.", details: error.details.map((d) => d.message) });
+  }
+
+  const {{metric}} = await Block.aggregate({{metric}}Pipeline({ athleteId, coachId, ...value }));
+  res.status(200).json({ message: "{{Metric}} retrieved", {{metric}} });
+};
+
+// Coach: athlete from the path (roster already checked by authorizeCoachForAthleteResource),
+// only blocks this coach wrote.
+const get{{Metric}} = (req: Request, res: Response) =>
+  run{{Metric}}(req, res, req.params.athleteId, String(req.user!._id));
+
+// Athlete: always themselves.
+const getAthlete{{Metric}} = (req: Request, res: Response) =>
+  run{{Metric}}(req, res, String(req.user!._id));
+
+export { get{{Metric}}, getAthlete{{Metric}} };
+
+// ═════════════════════════════════════════════════════════════════════════════
+// (3) routes/analytics.ts — mount at /api/analytics (ask before editing routes/routes.js).
+// ═════════════════════════════════════════════════════════════════════════════
+
+/// -- ATHLETE'S ENDPOINTS --  (literal first)
+
+// Get my {{Metric}}
+router.get("/athletes/{{metric}}", auth, authorizeAthlete, getAthlete{{Metric}});
+
+// -- COACH'S ENDPOINTS --
+
+// Get {{Metric}} for an athlete on my roster
+router.get("/:athleteId/{{metric}}", auth, authorizeCoachForAthleteResource, get{{Metric}});
