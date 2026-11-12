@@ -1,0 +1,72 @@
+// TEMPLATE (scaffold-protected-route) — insert snippets into existing files; never paste this whole file.
+// Placeholders: {{handler}} (e.g. duplicateBlock), {{Resource}}/{{resource}} (e.g. Block/block),
+//               {{path}}, {{Verb what}}, {{schema}}/{{updateSchema}}.
+// In a .js file, drop the type annotations and `!` (req.user!._id -> req.user._id).
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. ROUTE LINE — pick ONE chain (see SKILL.md Step 4). Place it per Step 5.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// (a) Coach acting on an athlete's resource — path contains :athleteId
+// {{Verb what}}
+router.post(
+  "/:athleteId/{{path}}",
+  auth,
+  authorizeCoachForAthleteResource,
+  validate({{schema}}),
+  {{handler}},
+);
+
+// (b) Athlete acting on their own :blockId / :compDayId
+// {{Verb what}}
+router.patch(
+  "/athletes/:blockId/{{path}}",
+  auth,
+  authorizeAthleteForResource,
+  validate({{updateSchema}}, { noDefaults: true }),
+  {{handler}},
+);
+
+// (c) Athlete acting on their own data (ownership enforced in the handler)
+// {{Verb what}}
+router.get("/athletes/{{path}}", auth, authorizeAthlete, {{handler}});
+
+// (d) Coach acting on their own data (ownership enforced in the handler)
+// {{Verb what}}
+router.delete("/{{path}}", auth, authorizeCoach, {{handler}});
+
+// Imports to add if missing (TS needs the .js extension too):
+// import auth from "../middleware/auth.js";
+// import { authorizeCoach, authorizeAthlete, authorizeCoachForAthleteResource, authorizeAthleteForResource } from "../middleware/authorization.js";
+// import validate from "../middleware/validate.js";
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. HANDLER — add to controllers/{{resource}}Controller.*, then to its export block.
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Scoped read-modify: the filter includes the caller, so a miss = "doesn't exist OR isn't yours".
+const {{handler}} = async (req: Request, res: Response) => {
+  const {{resource}} = await {{Resource}}.findOne({
+    _id: req.params.{{resource}}Id,      // exactly the param name declared in the route
+    coach: req.user!._id,               // athlete-side: athlete: req.user!._id
+    athlete: req.params.athleteId,      // only on :athleteId routes
+  });
+  if (!{{resource}}) {
+    return res.status(404).json({ message: "{{Resource}} not found or access denied." });
+  }
+
+  // ...the actual work: mutate + save() (runs pre("save") hooks), or findOneAndUpdate with
+  // { new: true, runValidators: true }. Multi-document writes that must succeed together -> transaction.
+
+  res.status(200).json({ message: "{{Resource}} updated", {{resource}} });
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. SCHEMA (only if no existing schema fits) — validation/{{resource}}.*
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Client-sent fields only; coach/athlete/computed fields stay out.
+const {{schema}} = Joi.object({
+  // fields...
+});
+// PATCH variant: const {{updateSchema}} = toUpdateSchema({{schema}});

@@ -1,0 +1,102 @@
+// TEMPLATE (scaffold-api) — delete this header when generating.
+// Placeholders: {{resource}} {{Resource}} {{resources}} {{Resources}}. Written for variant A.
+// Output path: controllers/{{resource}}Controller.ts
+//
+// No try/catch: express-async-errors forwards rejections to middleware/error.js
+// (CastError -> 400, ValidationError -> 400, 11000 -> 409, err.status 4xx -> that status).
+// No role checks: the router's authorize* middleware already did that.
+// Every query is scoped to the caller, so a miss means "doesn't exist OR isn't yours" -> 404.
+
+import type { Request, Response } from "express";
+import { {{Resource}} } from "../model/{{resource}}.js";
+
+// -- COACH'S ENDPOINTS --
+
+const getAll{{Resources}} = async (req: Request, res: Response) => {
+  const {{resources}} = await {{Resource}}.find({
+    coach: req.user!._id,
+    athlete: req.params.athleteId,
+  }).sort({ createdAt: -1 });
+
+  res.status(200).json({ message: "{{Resources}} retrieved", {{resources}} });
+};
+
+const getSingle{{Resource}} = async (req: Request, res: Response) => {
+  const {{resource}} = await {{Resource}}.findOne({
+    _id: req.params.{{resource}}Id,
+    coach: req.user!._id,
+    athlete: req.params.athleteId,
+  });
+  if (!{{resource}}) {
+    return res.status(404).json({ message: "{{Resource}} not found or access denied." });
+  }
+
+  res.status(200).json({ message: "{{Resource}} retrieved", {{resource}} });
+};
+
+const post{{Resource}} = async (req: Request, res: Response) => {
+  // Ownership comes from the request context, never from the body.
+  const {{resource}} = await {{Resource}}.create({
+    ...req.body,
+    coach: req.user!._id,
+    athlete: req.params.athleteId,
+  });
+
+  res.status(201).json({ message: "{{Resource}} created", {{resource}} });
+};
+
+const update{{Resource}} = async (req: Request, res: Response) => {
+  const {{resource}} = await {{Resource}}.findOneAndUpdate(
+    { _id: req.params.{{resource}}Id, coach: req.user!._id, athlete: req.params.athleteId },
+    { $set: req.body },
+    { new: true, runValidators: true }, // runValidators: findOneAndUpdate skips schema validation by default
+  );
+  if (!{{resource}}) {
+    return res.status(404).json({ message: "{{Resource}} not found or access denied." });
+  }
+
+  res.status(200).json({ message: "{{Resource}} updated", {{resource}} });
+};
+
+const delete{{Resource}} = async (req: Request, res: Response) => {
+  const {{resource}} = await {{Resource}}.findOneAndDelete({
+    _id: req.params.{{resource}}Id,
+    coach: req.user!._id,
+    athlete: req.params.athleteId,
+  });
+  if (!{{resource}}) {
+    return res.status(404).json({ message: "{{Resource}} not found or access denied." });
+  }
+
+  res.status(200).json({ message: "{{Resource}} deleted", {{resource}} });
+};
+
+// -- ATHLETE'S ENDPOINTS --
+
+const getAllAthlete{{Resources}} = async (req: Request, res: Response) => {
+  const {{resources}} = await {{Resource}}.find({ athlete: req.user!._id }).sort({ createdAt: -1 });
+
+  res.status(200).json({ message: "{{Resources}} retrieved", {{resources}} });
+};
+
+const getAthlete{{Resource}} = async (req: Request, res: Response) => {
+  const {{resource}} = await {{Resource}}.findOne({
+    _id: req.params.{{resource}}Id,
+    athlete: req.user!._id,
+  });
+  if (!{{resource}}) {
+    return res.status(404).json({ message: "{{Resource}} not found or access denied." });
+  }
+
+  res.status(200).json({ message: "{{Resource}} retrieved", {{resource}} });
+};
+
+export {
+  getAll{{Resources}},
+  getSingle{{Resource}},
+  post{{Resource}},
+  update{{Resource}},
+  delete{{Resource}},
+  getAllAthlete{{Resources}},
+  getAthlete{{Resource}},
+};

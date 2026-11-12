@@ -1,0 +1,21 @@
+// TEMPLATE (scaffold-api) — delete this header when generating.
+// Placeholders: {{resource}}. Output path: validation/{{resource}}.ts
+
+import Joi, { toUpdateSchema } from "./common.js"; // common.js registers Joi.objectId()
+import { {{resource}}TypeEnum } from "../constants/{{resource}}.js";
+
+// Client-sent fields only. `coach` / `athlete` come from req.user and req.params in the controller,
+// so they are deliberately absent. Joi rejects unknown keys, so a client can't sneak them in.
+const {{resource}}Schema = Joi.object({
+  // __FIELDS__ — replace with the real fields; same bounds/enums as model/{{resource}}.ts.
+  name: Joi.string().trim().min(1).max(50).required(),
+  type: Joi.string()
+    .valid(...{{resource}}TypeEnum)
+    .required(),
+  notes: Joi.string().max(1000).optional(),
+});
+
+// PATCH: required -> optional, at least one key. Use with validate(schema, { noDefaults: true }).
+const {{resource}}UpdateSchema = toUpdateSchema({{resource}}Schema);
+
+export { {{resource}}Schema, {{resource}}UpdateSchema };

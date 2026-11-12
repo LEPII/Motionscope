@@ -1,0 +1,34 @@
+// TEMPLATE (scaffold-api) — delete this header when generating.
+// Placeholders: {{resource}} {{Resource}}. Written for ownership variant A (coach-for-athlete).
+// Output path: model/{{resource}}.ts
+
+import mongoose, { type HydratedDocument, type InferSchemaType } from "mongoose";
+import { {{resource}}TypeEnum } from "../constants/{{resource}}.js";
+
+const {{resource}}Schema = new mongoose.Schema(
+  {
+    // Ownership refs: set by the controller from req.user / req.params, never from the body.
+    // VARIANT B: remove `athlete`. VARIANT C: remove `coach`.
+    coach: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    athlete: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+
+    // __FIELDS__ — replace these sample fields with the real ones.
+    // Mirror every constraint in validation/{{resource}}.ts.
+    name: { type: String, trim: true, minLength: 1, maxLength: 50, required: true },
+    type: { type: String, enum: {{resource}}TypeEnum, required: true },
+    notes: { type: String, maxLength: 1000 },
+  },
+  { timestamps: true },
+);
+
+// Backs the coach list query: { coach, athlete } sorted by newest.
+// VARIANT B: { coach: 1, createdAt: -1 }. VARIANT C: { athlete: 1, createdAt: -1 }.
+{{resource}}Schema.index({ coach: 1, athlete: 1, createdAt: -1 });
+
+type {{Resource}} = InferSchemaType<typeof {{resource}}Schema>;
+type {{Resource}}Doc = HydratedDocument<{{Resource}}>;
+
+// The name passed here must match every `ref: "{{Resource}}"` elsewhere.
+const {{Resource}} = mongoose.model("{{Resource}}", {{resource}}Schema);
+
+export { {{Resource}}, {{resource}}Schema, type {{Resource}}Doc };
