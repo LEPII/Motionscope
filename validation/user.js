@@ -1,5 +1,5 @@
 import Joi from "./common.js";
-import { roleEnum, unitPreferenceEnum } from "../constants/user.js";
+import { signupRoleEnum, unitPreferenceEnum } from "../constants/user.js";
 
 const userSchema = Joi.object({
   firstName: Joi.string().min(1).max(50).required().trim(),
@@ -8,12 +8,11 @@ const userSchema = Joi.object({
   email: Joi.string().min(5).max(255).required().trim().lowercase().email(),
   password: Joi.string().min(8).max(1024).required(),
   role: Joi.string()
-    .valid(...roleEnum)
+    .valid(...signupRoleEnum)
     .required(),
   unitPreference: Joi.string()
     .valid(...unitPreferenceEnum)
     .default("lbs"),
-  athletes: Joi.array().items(Joi.objectId()),
 });
 
 const userUpdateSchema = Joi.object({
