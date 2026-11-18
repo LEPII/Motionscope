@@ -7,14 +7,16 @@ export default async (req, res, next) => {
   const token = req.header("x-auth-token");
   if (!token) return res.status(401).send("Access denied. No token provided");
 
-  // this verify method verified the JWT token. If its valid, it will decode it and return the payload.
-
+  // jwt.verify checks the signature and decodes the payload; it throws on a bad or expired token.
+  // Only verify is inside the try, so DB errors and errors from later middleware aren't reported as "Invalid Token."
+  let decoded;
   try {
-    const decoded = jwt.verify(token, process.env.MOTIONSCOPE_JWT_PRIVATE_KEY);
-    req.user = await User.findById(decoded._id).select("-password");
-    if (!req.user) return res.status(401).send("Access denied. User not found.");
-    next();
+    decoded = jwt.verify(token, process.env.MOTIONSCOPE_JWT_PRIVATE_KEY);
   } catch (ex) {
-    res.status(400).send("Invalid Token.");
+    return res.status(401).send("Invalid Token.");
   }
+
+  req.user = await User.findById(decoded._id).select("-password");
+  if (!req.user) return res.status(401).send("Access denied. User not found.");
+  next();
 };
