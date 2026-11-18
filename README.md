@@ -196,7 +196,7 @@ On top of the role check, ownership middleware makes sure a coach can only touch
 
 All endpoints are prefixed with `/api`. Request bodies are JSON. Write endpoints validate the body against the matching Joi schema in [`validation/`](validation/) and return `400` with the validation message if it fails.
 
-**Common responses:** `400` invalid input or token · `401` no token · `403` wrong role or not your resource · `404` not found.
+**Common responses:** `400` invalid input · `401` missing or invalid token · `403` wrong role or not your resource · `404` not found.
 
 ### Auth: `/api/auth`
 
