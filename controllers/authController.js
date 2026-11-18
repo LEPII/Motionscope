@@ -34,7 +34,7 @@ const registerUser = async (req, res) => {
       "email",
       "password",
       "role",
-      "athletes",
+      "unitPreference",
     ])
   );
   const salt = await bcrypt.genSalt(12);
