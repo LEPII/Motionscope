@@ -13,10 +13,10 @@ const router = express.Router();
 /// Open Routes
 
 // logging in user
-router.post("/", validate(loginSchema), login);
+router.post("/login", validate(loginSchema), login);
 
 // register user
-router.post("/", validate(userSchema), registerUser);
+router.post("/register", validate(userSchema), registerUser);
 
 /// Secure Routes
 

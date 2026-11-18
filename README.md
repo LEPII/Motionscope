@@ -174,7 +174,7 @@ node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
 
 ## Authentication & Roles
 
-1. **Register** or **log in** through `/api/auth` to receive a JWT.
+1. **Register** (`POST /api/auth/register`) or **log in** (`POST /api/auth/login`) to receive a JWT.
 2. Send that token in the `x-auth-token` header on every protected request:
 
 ```http
@@ -202,8 +202,8 @@ All endpoints are prefixed with `/api`. Request bodies are JSON. Write endpoints
 
 | Method | Path | Access | Description |
 | --- | --- | --- | --- |
-| `POST` | `/` | Public | Log in with email and password. Returns a JWT |
-| `POST` | `/` | Public | Register a new user. Returns the user and sets `x-auth-token` |
+| `POST` | `/login` | Public | Log in with email and password. Returns a JWT |
+| `POST` | `/register` | Public | Register a new user. Returns the user and sets `x-auth-token` |
 | `GET` | `/me` | Any logged-in user | Get the current user's profile |
 
 ### Roster: `/api/roster`

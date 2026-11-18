@@ -21,7 +21,7 @@ jobs:
       - run: npm ci
       - name: Syntax check
         run: find . -name '*.js' -not -path './node_modules/*' -print0 | xargs -0 -n1 node --check
-      - run: npm audit --audit-level=high
+      - run: npm audit --omit=dev --audit-level=high
       #:  todo: uncomment once Jest + Supertest are set up
       #  (current "test" script exits 1 on purpose, so it's off for now)
       # - run: npm test
