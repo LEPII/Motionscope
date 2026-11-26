@@ -1,4 +1,3 @@
-import auth from "../middleware/auth.js";
 import {
   getQuestionnaire,
   postQuestionnaire,
@@ -22,7 +21,6 @@ router.get("/:athletesId", getQuestionnaire);
 // Post Questionnaire
 router.post(
   "/athlete",
-  auth,
   validate(questionnaireSchema),
   postQuestionnaire
 );
@@ -30,7 +28,6 @@ router.post(
 // Patch Questionnaire
 router.patch(
   "/:id",
-  auth,
   validate(questionnaireUpdateSchema, { noDefaults: true }),
   updateQuestionnaire
 );

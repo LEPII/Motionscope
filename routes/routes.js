@@ -8,18 +8,22 @@ import exercises from "./exercises.js";
 import programs from "./programs.js";
 import questionnaires from "./questionnaires.js";
 import roster from "./roster.js";
+import authMiddleware from "../middleware/auth.js";
 import error from "../middleware/error.js";
 
 export default function myRoutes(app) {
   app.use(express.json());
+
   app.use("/api/auth", auth);
-  app.use("/api/blockAthlete", blockAthlete);
-  app.use("/api/blockCoach", blockCoach);
-  app.use("/api/blocks", blocks);
-  app.use("/api/compDay", compDay);
-  app.use("/api/exercises", exercises);
-  app.use("/api/programs", programs);
-  app.use("/api/questionnaires", questionnaires);
-  app.use("/api/roster", roster);
+
+  app.use("/api/blockAthlete", authMiddleware, blockAthlete);
+  app.use("/api/blockCoach", authMiddleware, blockCoach);
+  app.use("/api/blocks", authMiddleware, blocks);
+  app.use("/api/compDay", authMiddleware, compDay);
+  app.use("/api/exercises", authMiddleware, exercises);
+  app.use("/api/programs", authMiddleware, programs);
+  app.use("/api/questionnaires", authMiddleware, questionnaires);
+  app.use("/api/roster", authMiddleware, roster);
+
   app.use(error);
 }
