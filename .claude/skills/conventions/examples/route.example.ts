@@ -3,13 +3,13 @@
 // Example: TypeScript translation of routes/blocks.js, following conventions/SKILL.md.
 // Chosen over routes/exercises.js because it shows both roles, resource-level authorization and route ordering.
 // Changes vs. the source file:
-//   - every route has the full chain: auth -> authorize* -> validate -> handler (backlog #4, #16)
+//   - auth runs at the mount in routes/routes.js (app.use("/api/blocks", authMiddleware, router)), so this
+//     file never imports it; every route has the rest of the chain: authorize* -> validate -> handler (B4, B16)
 //   - athlete literal routes declared BEFORE /:athleteId/... so they're reachable (backlog #6)
 //   - athlete "all blocks" is GET /athletes (was /athletes/blocks, which collided with /athletes/:blockId)
 //   - archive moved to /:athleteId/:blockId/archive so authorizeCoachForAthleteResource can verify it
 
 import express from "express";
-import auth from "../middleware/auth.js";
 import {
   authorizeAthlete,
   authorizeAthleteForResource,
@@ -36,41 +36,38 @@ const router = express.Router();
 /// -- ATHLETE'S ENDPOINTS --  (literal paths first so /:athleteId can't swallow them)
 
 // Get all of the logged-in athlete's Blocks
-router.get("/athletes", auth, authorizeAthlete, getAllAthleteBlocks);
+router.get("/athletes", authorizeAthlete, getAllAthleteBlocks);
 
 // Get one of the logged-in athlete's Blocks
-router.get("/athletes/:blockId", auth, authorizeAthleteForResource, getCurrentBlock);
+router.get("/athletes/:blockId", authorizeAthleteForResource, getCurrentBlock);
 
 // -- COACH'S ENDPOINTS --
 
 // Create a Block from a saved template
 router.post(
   "/use/:templateId",
-  auth,
   authorizeCoach,
   validate(createBlockFromTemplateSchema),
   createBlockFromTemplate,
 );
 
 // Get all Blocks for a specific Athlete
-router.get("/:athleteId", auth, authorizeCoachForAthleteResource, getAllBlocks);
+router.get("/:athleteId", authorizeCoachForAthleteResource, getAllBlocks);
 
 // Post a Block to a specific Athlete
 router.post(
   "/:athleteId",
-  auth,
   authorizeCoachForAthleteResource,
   validate(blockCoachSchema),
   postBlock,
 );
 
 // Get a single Block from a specific Athlete
-router.get("/:athleteId/:blockId", auth, authorizeCoachForAthleteResource, getSingleBlock);
+router.get("/:athleteId/:blockId", authorizeCoachForAthleteResource, getSingleBlock);
 
 // Update a Block from a specific Athlete
 router.patch(
   "/:athleteId/:blockId",
-  auth,
   authorizeCoachForAthleteResource,
   validate(blockCoachUpdateSchema, { noDefaults: true }),
   updateBlock,
@@ -79,12 +76,11 @@ router.patch(
 // Archive / unarchive a Block from a specific Athlete
 router.patch(
   "/:athleteId/:blockId/archive",
-  auth,
   authorizeCoachForAthleteResource,
   toggleBlockArchive,
 );
 
 // Delete a Block from a specific Athlete
-router.delete("/:athleteId/:blockId", auth, authorizeCoachForAthleteResource, deleteBlock);
+router.delete("/:athleteId/:blockId", authorizeCoachForAthleteResource, deleteBlock);
 
 export default router;

@@ -27,7 +27,7 @@ Worked examples — read before generating a model or router:
 | Joi | `validation/<resource>.ts` | named: `export { fooSchema, fooUpdateSchema }` |
 | Controller | `controllers/<resource>Controller.ts` | named export block at bottom |
 | Router | `routes/<resources>.ts` | `export default router` |
-| Mount | `routes/routes.js` | `app.use("/api/<resources>", router)` **before** `app.use(error)` |
+| Mount | `routes/routes.js` | `app.use("/api/<resources>", authMiddleware, router)` **before** `app.use(error)` (public routers like `/api/auth` omit `authMiddleware`) |
 
 `<resource>` is camelCase singular (`drill`, `compDay`); the router file and mount path are camelCase plural (`routes/drills.ts`, `/api/drills`). Older files break this (`controllers/compDay.js`, `/api/compDay` — backlog #19); don't copy them.
 
@@ -72,10 +72,14 @@ export { fooSchema, fooUpdateSchema };
 ## 5. Routers — the middleware chain is the security policy
 
 ```
-auth → authorize<Role | …ForResource> → validate(schema[, { noDefaults: true }]) → handler
+auth (at the mount) → authorize<Role | …ForResource> → validate(schema[, { noDefaults: true }]) → handler
 ```
 
-401 (who are you?) → 403 (are you allowed?) → 400 (is the body valid?) → business logic. Each step is a small, separately testable function, and the route line shows its whole policy at a glance. If every route in a router shares the same chain prefix, `router.use(auth, authorizeCoach)` at the top is fine; otherwise put the chain on each route.
+401 (who are you?) → 403 (are you allowed?) → 400 (is the body valid?) → business logic. Each step is a small, separately testable function.
+
+**`auth` lives at the mount, not in the router.** `routes/routes.js` imports `middleware/auth.js` once as `authMiddleware` (the name `auth` is taken by the auth router) and puts it on every protected mount: `app.use("/api/<resources>", authMiddleware, router)`. Public routers (`/api/auth`) are mounted without it; a router with both public and protected routes (`/api/auth` with `/me`) keeps `auth` on its protected routes instead. Routers don't import `auth` and don't repeat it per route — it would run twice (two `User.findById` per request). Keep each mount explicit rather than grouping protected routers under one `app.use("/api", authMiddleware, …)`: per-line makes it obvious which routers are protected, and unknown `/api/*` paths still 404 instead of 401.
+
+**Everything after `auth` stays on each route**, so the route line shows its access policy at a glance: `router.get("/:athleteId", authorizeCoachForAthleteResource, getAllBlocks)`. If every route in a router needs the same role gate, `router.use(authorizeCoach)` at the top is fine; otherwise put it on each route.
 
 Reuse what's in `middleware/authorization.js`:
 
@@ -138,7 +142,7 @@ Numbers refer to the project bug backlog.
 
 | Where | Problem | Do instead |
 |---|---|---|
-| most `routes/*.js` | no `auth`, so `req.user` is undefined (#4) | full chain, §5 |
+| most `routes/*.js` (before B4) | no `auth`, so `req.user` was undefined (#4) | `authMiddleware` at the mount + `authorize*` per route, §5 |
 | `routes/blocks.js`, `compDay.js`, `programs.js`, `templateBlocks.js` | param route shadows literal route (#6) | literals first |
 | `routes/auth.js` | login & register both `POST /` (#2) | unique method + path |
 | `routes/programs.js` | `POST /:id` deletes (#8) | `DELETE /:id` |
